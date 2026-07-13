@@ -11429,11 +11429,16 @@ this.displayCount = 35;
     // 🌟 1. 清空输入框
     input.value = '';
 
-    // 🌟 2. 启动增量渲染！只画刚发出去的那一条气泡！速度飞快！
+    // 🌟 2. 主动让输入框失去焦点，立刻让输入法丝滑回落！
+    if (!this.isComboMode) {
+        input.blur(); 
+    }
+
+    // 🌟 3. 启动增量渲染！只画刚发出去的那一条气泡！速度飞快！
     this.render(true, true);
     this.resetProactiveTimer();
     
-    // 🌟 3. 后台异步保存，不卡键盘
+    // 🌟 4. 后台异步保存，不卡主线程
     setTimeout(() => {
         msgApp.save();
         this.save();
@@ -11443,7 +11448,22 @@ this.displayCount = 35;
     if (!this.isComboMode) {
         setTimeout(() => {
             newMsg.isRead = true;
-            this.render('keep'); // 这里状态变了再偷偷全体重绘
+            // 🔥 绝杀优化：绝不能用 render 全量重绘！直接 DOM 精准打击修改状态防卡顿！
+            const targetMsgEl = document.querySelector(`.chat-msg[data-msg-id="${newMsg.id}"]`);
+            if (targetMsgEl) {
+                const readWrap = targetMsgEl.querySelector('.msg-content-wrap');
+                if (readWrap) {
+                    const oldRead = readWrap.querySelector('.msg-read-text');
+                    if (settingsApp.config.readStyle === '文字 (已读)' || !settingsApp.config.readStyle) {
+                        if (oldRead) { oldRead.innerText = '已读'; oldRead.style.opacity = '1'; }
+                    } else {
+                        // 如果是打勾样式，暴力替换
+                        if (oldRead) oldRead.remove();
+                        readWrap.insertAdjacentHTML('beforeend', `<div class="msg-read-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12l5 5L18 6"/><path d="M7 12l5 5L22 6"/></svg></div>`);
+                    }
+                }
+            }
+            setTimeout(() => this.save(), 50); // 后台偷偷存一下最新状态
             if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply(); 
         }, 800); 
     }
@@ -11456,7 +11476,6 @@ async sendImg(input) {
             const base64 = e.target.result;
             const newMsg = { id: Date.now(), isMe: true, type: 'image', text: base64, time: this.getFormattedTime(), isRead: false };
             
-            // 如果存在引用，附加上去并清除
             if (this.currentQuote) {
                 newMsg.quote = {
                     name: this.currentQuote.isMe ? '我' : this.currentRole.name,
@@ -11467,26 +11486,35 @@ async sendImg(input) {
 
             this.messages.push(newMsg);
             this.currentRole.lastMsg = "我: [图片]";
-            
             input.value = ''; 
             
-// 🌟 直接单条追加渲染！瞬间发图！
-this.render(true, true);
-this.resetProactiveTimer();
+            // 🌟 瞬间追加单条渲染！
+            this.render(true, true);
+            this.resetProactiveTimer();
 
-// 🌟 后台异步保存
-setTimeout(() => {
-    msgApp.save();
-    this.save();
-}, 10);
+            setTimeout(() => { msgApp.save(); this.save(); }, 10);
 
-if (!this.isComboMode) {
-    setTimeout(() => {
-        newMsg.isRead = true;
-        this.render('keep');
-        if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply(); 
-    }, 800);
-}
+            if (!this.isComboMode) {
+                setTimeout(() => {
+                    newMsg.isRead = true;
+                    // 🔥 同理：发图也必须是精准 DOM 打击，干掉 render
+                    const targetMsgEl = document.querySelector(`.chat-msg[data-msg-id="${newMsg.id}"]`);
+                    if (targetMsgEl) {
+                        const readWrap = targetMsgEl.querySelector('.msg-content-wrap');
+                        if (readWrap) {
+                            const oldRead = readWrap.querySelector('.msg-read-text');
+                            if (settingsApp.config.readStyle === '文字 (已读)' || !settingsApp.config.readStyle) {
+                                if (oldRead) { oldRead.innerText = '已读'; oldRead.style.opacity = '1'; }
+                            } else {
+                                if (oldRead) oldRead.remove();
+                                readWrap.insertAdjacentHTML('beforeend', `<div class="msg-read-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12l5 5L18 6"/><path d="M7 12l5 5L22 6"/></svg></div>`);
+                            }
+                        }
+                    }
+                    setTimeout(() => this.save(), 50);
+                    if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply(); 
+                }, 800);
+            }
         };
         reader.readAsDataURL(input.files[0]);
     }
@@ -13131,18 +13159,24 @@ chatApp.applySettingsUI = function() {
 };
 
 const originalChatRender = chatApp.render.bind(chatApp);
-chatApp.render = function(autoScroll = true) {
-    originalChatRender(autoScroll); // 先执行原本的渲染
+chatApp.render = function(autoScroll = true, isAppend = false) {
+    // 👈 致命修复：必须把 isAppend 传给原函数！否则每次发消息都会把全屏历史记录删掉重绘！
+    originalChatRender(autoScroll, isAppend); 
+    
     // 动态注入全局气泡皮肤的 Class
-const container = document.getElementById('chat-msg-container');
-container.className = `chat-body b-theme-${beautyApp.config.bubbleTheme || 'default'}`;
+    const container = document.getElementById('chat-msg-container');
+    container.className = `chat-body b-theme-${beautyApp.config.bubbleTheme || 'default'}`;
 
     // 渲染完后，替换 "我" 的头像
     if (this.currentSettings && this.currentSettings.myAvatar) {
-        const container = document.getElementById('chat-msg-container');
-        const myAvatars = container.querySelectorAll('.chat-msg.right .msg-avatar');
-        myAvatars.forEach(el => {
-            el.style.backgroundImage = `url(${this.currentSettings.myAvatar})`;
+        // 增量优化：如果是单条发送(isAppend)，就只去改最后一条的头像，不遍历全局！
+        const msgs = isAppend ? [container.lastElementChild] : container.querySelectorAll('.chat-msg.right');
+        msgs.forEach(msgEl => {
+            if (!msgEl) return;
+            const avatarEl = msgEl.querySelector('.msg-avatar');
+            if (avatarEl && msgEl.classList.contains('right')) {
+                avatarEl.style.backgroundImage = `url(${this.currentSettings.myAvatar})`;
+            }
         });
     }
 };
@@ -16196,7 +16230,7 @@ const dataManager = {
 };
 /* ================= 数据导入导出管理系统 JS END ================= */
 
-/* ================= 极致丝滑补丁：拦截底部按钮防卡顿 ================= */
+/* ================= 极致丝滑补丁：0毫秒触发与防卡顿 ================= */
 document.addEventListener('DOMContentLoaded', () => {
     // 找到页面上绑定了发送事件的那个按钮
     const btnSend = document.querySelector('[onclick*="chatApp.sendMsg()"]');
@@ -16205,12 +16239,11 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSend.removeAttribute('onclick'); 
         
         const handleSend = (e) => {
-            // 【核心魔法】阻止浏览器默认行为，锁死焦点，键盘绝对不会掉下去！
-            e.preventDefault(); 
+            e.preventDefault(); // 拦截浏览器默认行为，防止按钮点击产生虚影
             chatApp.sendMsg();  
         };
         
-        // 绑定 0 毫秒延迟的触摸事件
+        // 必须用 touchstart！手指触碰屏幕的第 0 毫秒就立刻发出去！
         btnSend.addEventListener('touchstart', handleSend, { passive: false });
         btnSend.addEventListener('mousedown', handleSend);
     }
