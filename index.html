@@ -11386,18 +11386,16 @@ this.displayCount = 35;
     if(!text) {
         if (this.isComboMode) {
             let hasUnread = false;
-            // 找出所有还在暂存（未读）状态的消息
             this.messages.forEach(m => {
                 if (m.isMe && !m.isRead) {
-                    m.isRead = true; // 变为已读（发送成功）
+                    m.isRead = true; 
                     hasUnread = true;
                 }
             });
             if (hasUnread) {
-                this.render(true); // 先立刻刷新界面
-                this.save();       // 后台保存
+                this.render(true); 
+                setTimeout(() => { this.save(); msgApp.save(); }, 50); // 延迟保存
                 showNotification("连发消息已打包发送 ✧");
-                // 触发梦角的回复
                 if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply();
             }
         }
@@ -11418,25 +11416,26 @@ this.displayCount = 35;
     this.messages.push(newMsg);
     this.currentRole.lastMsg = "我: " + text;
     
+    // 🌟 1. 清空输入框，但绝不执行 input.blur()，让键盘稳稳保持弹起！
     input.value = '';
-    input.blur();
     
-    // 🌟【关键修复】：取消 await 阻塞，先立刻渲染让气泡上屏！
+    // 🌟 2. 瞬间渲染气泡上屏！
     this.render();
-    setTimeout(() => { window.scrollTo(0, 0); document.body.scrollTop = 0; }, 10);
     this.resetProactiveTimer();
 
-    // 🌟 让数据库去后台默默保存，不卡界面
-    msgApp.save();
-    this.save();
+    // 🌟 3. 把沉重的数据库保存操作扔到下一帧，绝对不卡界面！
+    setTimeout(() => {
+        msgApp.save();
+        this.save();
+    }, 50);
     
     // 如果没有开连发模式，正常发出并等待回复
     if (!this.isComboMode) {
         setTimeout(() => {
             newMsg.isRead = true;
-            this.render(true); 
+            this.render('keep'); // 使用 'keep' 防止跳动
             if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply(); 
-        }, 800); // 👈 如果觉得变成已读太慢，把这个 800 改成 300 或更小
+        }, 800); 
     }
 },
 
@@ -16146,6 +16145,26 @@ const dataManager = {
     }
 };
 /* ================= 数据导入导出管理系统 JS END ================= */
+
+/* ================= 极致丝滑补丁：拦截底部按钮防卡顿 ================= */
+document.addEventListener('DOMContentLoaded', () => {
+    // 找到页面上绑定了发送事件的那个按钮
+    const btnSend = document.querySelector('[onclick*="chatApp.sendMsg()"]');
+    if (btnSend) {
+        // 剥夺原生的迟钝点击事件
+        btnSend.removeAttribute('onclick'); 
+        
+        const handleSend = (e) => {
+            // 【核心魔法】阻止浏览器默认行为，锁死焦点，键盘绝对不会掉下去！
+            e.preventDefault(); 
+            chatApp.sendMsg();  
+        };
+        
+        // 绑定 0 毫秒延迟的触摸事件
+        btnSend.addEventListener('touchstart', handleSend, { passive: false });
+        btnSend.addEventListener('mousedown', handleSend);
+    }
+});
 </script>
 
 </body>
