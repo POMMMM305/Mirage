@@ -9475,7 +9475,7 @@ if ('serviceWorker' in navigator) {
 
         <div class="modal-actions" style="justify-content: space-between; gap: 15px; margin-top: 10px;">
             <button class="btn-cancel" onclick="document.getElementById('tacit-modal').style.display='none'" style="flex: 1;">CANCEL</button>
-            <button class="btn-save" onclick="tacitApp.sendAsk()" style="flex: 1; background: var(--theme-main) ; color: #fff;">SEND ⨯ 发送测试</button>
+            <button class="btn-save" onclick="tacitApp.sendAsk()" style="flex: 1; background: var(--theme-main) ; color: #fff;">SEND ⨯ 发送</button>
         </div>
     </div>
 </div>
@@ -10432,15 +10432,14 @@ async function resetEdit() {
             el.style.backgroundImage = 'none';
             el.innerHTML = def.icon; 
         } else if (def.type === 'wallpaper') {
-            const phone = document.getElementById('phone');
-            phone.style.backgroundImage = `
-                linear-gradient(#eaeaea 1px, transparent 1px),
-                linear-gradient(90deg, #eaeaea 1px, transparent 1px),
-                linear-gradient(rgba(43,43,43,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(43,43,43,0.03) 1px, transparent 1px)`;
-            phone.style.backgroundColor = '#ffffff';
-            phone.style.backgroundSize = '15px 15px, 15px 15px, 60px 60px, 60px 60px';
-        }
+    const phone = document.getElementById('phone');
+    // 把之前强加的强制属性统统删掉，让主题自带的背景重新接管
+    phone.style.removeProperty('background-image');
+    phone.style.removeProperty('background-color');
+    phone.style.removeProperty('background-size');
+    phone.style.removeProperty('background-repeat');
+    phone.style.removeProperty('background-position');
+}
     }
     
     closeEdit();
@@ -10458,11 +10457,12 @@ function applyImage(id, type, base64) {
         el.innerHTML = ''; 
     } else if (type === 'wallpaper') {
         const phone = document.getElementById('phone');
-        phone.style.backgroundImage = `url(${base64})`;
-        phone.style.backgroundColor = '#ffffff';
-        phone.style.backgroundSize = 'cover';
-        phone.style.backgroundRepeat = 'no-repeat';
-        phone.style.backgroundPosition = 'center';
+        // 加上 important 强行顶碎 CSS 里主题强加的壁纸屏蔽
+        phone.style.setProperty('background-image', `url(${base64})`, 'important');
+        phone.style.setProperty('background-color', 'transparent', 'important');
+        phone.style.setProperty('background-size', 'cover', 'important');
+        phone.style.setProperty('background-repeat', 'no-repeat', 'important');
+        phone.style.setProperty('background-position', 'center', 'important');
     }
 }
 
