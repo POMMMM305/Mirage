@@ -11614,9 +11614,18 @@ if (randSpecial < 0.03) {
     newMsg = { id: Date.now(), isMe: false, type: 'thought', text: thoughtText, time: this.getFormattedTime(), isRead: true };
     this.messages.push(newMsg);
     this.currentRole.lastMsg = "TA 好像在想什么...";
+
 } else if (randSpecial < 0.06) {
-    // 3% 概率发红包
-    let amt = Math.floor(Math.random() * 520) + 1; 
+    // 3% 概率发红包（没钱就发空包）
+    if (this.currentRole.balance === undefined) this.currentRole.balance = 0;
+    
+    let amt = 0;
+    // 检查TA有没有钱，有钱才随机发钱并扣钱；没钱的话 amt 保持为 0，就会触发空包！
+    if (this.currentRole.balance >= 1) {
+        let maxAmt = Math.min(this.currentRole.balance, 520); 
+        amt = Math.floor(Math.random() * maxAmt) + 1;
+        this.currentRole.balance -= amt; // 扣掉真实余额
+    }
     
     // 80% 概率把这次想说的字卡内容变成附言，20% 留空
     let rpMsg = "";
@@ -11628,11 +11637,10 @@ if (randSpecial < 0.03) {
     this.messages.push(newMsg);
     this.currentRole.lastMsg = this.currentRole.name + ": [转账票据]";
     
-    } else if (randSpecial < 0.09) {
-    // 3% 概率梦角主动抽塔罗牌 (0.06 ~ 0.09)
+} else if (randSpecial < 0.09) {
+    // 3% 概率梦角主动抽塔罗牌
     let drawCount = Math.random() < 0.5 ? 1 : 3;
     let npcCards = tarotApp.drawRandomCards(drawCount);
-    let tarotHtml = npcCards.map(c => `【${c.name}·${c.isReversed ? '逆位' : '正位'}】`).join(' ');
     
     // 把抽出的塔罗牌包装成一条消息
     newMsg = { 
@@ -11652,7 +11660,7 @@ if (randSpecial < 0.03) {
     }, 1000);
     
 } else {
-    // 没抽中红包，就正常发送原本从字卡里抽出来的话
+    // 剩下的 91% 概率，正常发送字卡里抽出来的话
     newMsg = { id: Date.now(), isMe: false, text: replies[i], time: this.getFormattedTime() };
     if (i === 0 && npcQuote) {
         newMsg.quote = npcQuote;
@@ -11663,7 +11671,7 @@ if (randSpecial < 0.03) {
 
 await msgApp.save();
 await this.save();
-this.render(); 
+this.render();
 
 // 📌 新增：3% 概率梦角发完后发现不对劲，火速撤回
 if (Math.random() < 0.03) {
@@ -11924,13 +11932,13 @@ if (msg.type === 'thought') {
                 <div class="msg-avatar" ${avatarStyle}></div>
                 
                 <!-- 极繁风脑电波卡片外壳 -->
-                <div style="background: #fff; border: 2px solid var(--theme-main) ; padding: 14px 12px 10px 12px; border-radius: 2px; position: relative; box-shadow: 4px 4px 0 rgba(43,43,43,0.05); margin-top: 4px; background-image: radial-gradient(#eaeaea 1px, transparent 1px); background-size: 10px 10px; min-width: 170px;">
+                <div class="thought-msg-box" style="background: #fff; border: 2px solid var(--theme-main) ; padding: 14px 12px 10px 12px; border-radius: 2px; position: relative; box-shadow: 4px 4px 0 rgba(43,43,43,0.05); margin-top: 4px; background-image: radial-gradient(#eaeaea 1px, transparent 1px); background-size: 10px 10px; min-width: 170px;">
                     
                     <!-- 左上角撕裂感胶带 -->
-                    <div style="position: absolute; top: -8px; left: -5px; background: var(--theme-main) ; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; transform: rotate(-3deg); border: 1px dashed #fff; letter-spacing: 1px; z-index: 5;">SUDDEN THOUGHT</div>
+                    <div class="thought-tag" style="position: absolute; top: -8px; left: -5px; background: var(--theme-main) ; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; transform: rotate(-3deg); border: 1px dashed #fff; letter-spacing: 1px; z-index: 5;">SUDDEN THOUGHT</div>
                     
                     <!-- 顶部虚线档案头 -->
-                    <div style="font-size: 9px; color: #888; border-bottom: 1px dashed #ccc; padding-bottom: 4px; margin-bottom: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div class="thought-header" style="font-size: 9px; color: #888; border-bottom: 1px dashed #ccc; padding-bottom: 4px; margin-bottom: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: flex-end;">
                         <span style="font-family: monospace;">脑电波片段录入 ♱</span>
                         <span style="font-size: 8px; color: var(--theme-accent);">[ SIGNAL ]</span>
                     </div>
@@ -11944,7 +11952,7 @@ if (msg.type === 'thought') {
                         </div>
                         <div style="margin-top: 2px;">
                             <!-- 粉色高光下划线效果 -->
-                            <span style="color: var(--theme-main) ; font-size: 15px; font-weight: 900; background: repeating-linear-gradient(transparent, transparent 10px, rgba(255,51,102,0.15) 10px, rgba(255,51,102,0.15) 18px); padding: 0 4px; border-bottom: 2px dashed var(--theme-accent);">${tData.o}</span>
+                            <span class="thought-target" style="color: var(--theme-main) ; font-size: 15px; font-weight: 900; background: repeating-linear-gradient(transparent, transparent 10px, rgba(255,51,102,0.15) 10px, rgba(255,51,102,0.15) 18px); padding: 0 4px; border-bottom: 2px dashed var(--theme-accent);">${tData.o}</span>
                         </div>
                     </div>
 
