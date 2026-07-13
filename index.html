@@ -588,11 +588,21 @@ body.dark-mode .msg-signal-box::before { color: #555; }
     .role-last { font-size: 11px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; font-weight: bold;}
 
     /* 聊天室页面基础 */
-    .chat-body { flex: 1; overflow-y: auto; padding: 20px 15px; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; }
+    .chat-body { 
+    flex: 1; overflow-y: auto; padding: 20px 15px; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; 
+    /* 👇 彻底封锁重绘范围，不再牵连背后的百大组件 */
+    contain: strict; 
+    will-change: transform, scroll-position;
+    transform: translateZ(0);
+}
     .chat-body::-webkit-scrollbar { display: none; }
     
     /* 气泡样式 (保留了你觉得可以的部分) */
-    .chat-msg { display: flex; flex-direction: column; gap: 5px; position: relative; max-width: 85%; }
+    .chat-msg { 
+    display: flex; flex-direction: column; gap: 5px; position: relative; max-width: 85%; 
+    /* 👇 告诉手机GPU：单条气泡就是一个实心砖块，里面的内容绝对不会影响外面 */
+    contain: layout style;
+}
     .chat-msg.left { align-self: flex-start; }
     .chat-msg.right { align-self: flex-end; align-items: flex-end; }
     .msg-time { font-size: 9px; font-weight: bold; color: var(--theme-main) ; letter-spacing: 1px; background: transparent; padding: 1px 6px; width: fit-content; border-bottom: 1px dotted var(--theme-main) ; margin-bottom: 12px; }
