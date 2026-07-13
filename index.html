@@ -10445,12 +10445,12 @@ async importFromFile(input) {
                     }
                     
                     this.data.unshift({
-                        id: Date.now() + index, // 重新生成ID防冲突
-                        text: String(item.text).trim(),
-                        selected: false,
-                        group: groupName,
-                        category: item.category || groupName // 无缝对接
-                    });
+    id: Date.now() + index, // 重新生成ID防冲突
+    text: String(item.text).trim(),
+    selected: false,
+    group: groupName,
+    category: (item.category === 'status' ? 'status' : 'chat')
+});
                     importedCount++;
                 });
 
