@@ -11392,19 +11392,16 @@ this.displayCount = 35;
     const input = document.getElementById('chat-input-box');
     const text = input.value.trim();
     
-    // 【全新逻辑】：如果输入框为空，且开着连发模式，就一键打包发送暂存的消息！
+    // 【连发模式下如果为空，打包发送】
     if(!text) {
         if (this.isComboMode) {
             let hasUnread = false;
             this.messages.forEach(m => {
-                if (m.isMe && !m.isRead) {
-                    m.isRead = true; 
-                    hasUnread = true;
-                }
+                if (m.isMe && !m.isRead) { m.isRead = true; hasUnread = true; }
             });
             if (hasUnread) {
                 this.render(true); 
-                setTimeout(() => { this.save(); msgApp.save(); }, 50); // 延迟保存
+                setTimeout(() => { this.save(); msgApp.save(); }, 50);
                 showNotification("连发消息已打包发送 ✧");
                 if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply();
             }
@@ -11414,7 +11411,6 @@ this.displayCount = 35;
     
     const newMsg = { id: Date.now(), isMe: true, text: text, time: this.getFormattedTime(), isRead: false };
     
-    // 如果存在引用，附加上去并清除
     if (this.currentQuote) {
         newMsg.quote = {
             name: this.currentQuote.isMe ? '我' : this.currentRole.name,
@@ -11426,29 +11422,30 @@ this.displayCount = 35;
     this.messages.push(newMsg);
     this.currentRole.lastMsg = "我: " + text;
     
-    // 🌟 1. 清空输入框
+    // 🌟 1. 瞬间清空输入框
     input.value = '';
 
-    // 🌟 2. 主动让输入框失去焦点，立刻让输入法丝滑回落！
-    if (!this.isComboMode) {
-        input.blur(); 
-    }
-
-    // 🌟 3. 启动增量渲染！只画刚发出去的那一条气泡！速度飞快！
+    // 🌟 2. 纯净增量渲染气泡（此时绝不触发键盘收起，保证 CPU 100% 留给画气泡！）
     this.render(true, true);
     this.resetProactiveTimer();
     
-    // 🌟 4. 后台异步保存，不卡主线程
-    setTimeout(() => {
-        msgApp.save();
-        this.save();
-    }, 10);
+    // 🌟 3. 黑科技渲染分流：等气泡确确实实显示在屏幕上了（下一帧），再去处理耗时操作！
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            if (!this.isComboMode) {
+                input.blur(); // 气泡已经出现后，顺滑降下键盘
+            }
+            // 数据库保存扔到后台，不卡主屏幕
+            msgApp.save();
+            this.save();
+        }, 0);
+    });
     
-    // 如果没有开连发模式，正常发出并等待回复
+    // 4. 如果没有开连发模式，正常发出并等待回复
     if (!this.isComboMode) {
         setTimeout(() => {
             newMsg.isRead = true;
-            // 🔥 绝杀优化：绝不能用 render 全量重绘！直接 DOM 精准打击修改状态防卡顿！
+            // 精准 DOM 打击修改状态，绝不重绘全局
             const targetMsgEl = document.querySelector(`.chat-msg[data-msg-id="${newMsg.id}"]`);
             if (targetMsgEl) {
                 const readWrap = targetMsgEl.querySelector('.msg-content-wrap');
@@ -11457,13 +11454,12 @@ this.displayCount = 35;
                     if (settingsApp.config.readStyle === '文字 (已读)' || !settingsApp.config.readStyle) {
                         if (oldRead) { oldRead.innerText = '已读'; oldRead.style.opacity = '1'; }
                     } else {
-                        // 如果是打勾样式，暴力替换
                         if (oldRead) oldRead.remove();
                         readWrap.insertAdjacentHTML('beforeend', `<div class="msg-read-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12l5 5L18 6"/><path d="M7 12l5 5L22 6"/></svg></div>`);
                     }
                 }
             }
-            setTimeout(() => this.save(), 50); // 后台偷偷存一下最新状态
+            setTimeout(() => this.save(), 50);
             if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply(); 
         }, 800); 
     }
@@ -13160,24 +13156,30 @@ chatApp.applySettingsUI = function() {
 
 const originalChatRender = chatApp.render.bind(chatApp);
 chatApp.render = function(autoScroll = true, isAppend = false) {
-    // 👈 致命修复：必须把 isAppend 传给原函数！否则每次发消息都会把全屏历史记录删掉重绘！
     originalChatRender(autoScroll, isAppend); 
     
-    // 动态注入全局气泡皮肤的 Class
     const container = document.getElementById('chat-msg-container');
-    container.className = `chat-body b-theme-${beautyApp.config.bubbleTheme || 'default'}`;
+    
+    // 🔥 性能杀手切除：如果 className 没变，绝对不重新赋值！
+    // 不然每次发消息都会触发全屏幕 CSS 重算，导致卡顿0.5秒！
+    const targetClass = `chat-body b-theme-${beautyApp.config.bubbleTheme || 'default'}`;
+    if (container.className !== targetClass) {
+        container.className = targetClass;
+    }
 
     // 渲染完后，替换 "我" 的头像
     if (this.currentSettings && this.currentSettings.myAvatar) {
-        // 增量优化：如果是单条发送(isAppend)，就只去改最后一条的头像，不遍历全局！
-        const msgs = isAppend ? [container.lastElementChild] : container.querySelectorAll('.chat-msg.right');
-        msgs.forEach(msgEl => {
-            if (!msgEl) return;
-            const avatarEl = msgEl.querySelector('.msg-avatar');
-            if (avatarEl && msgEl.classList.contains('right')) {
-                avatarEl.style.backgroundImage = `url(${this.currentSettings.myAvatar})`;
+        // 🔥 极致增量优化：单条发送时只精确寻找最后 1 个气泡，绝不扫描全屏！
+        if (isAppend) {
+            const lastEl = container.lastElementChild;
+            if (lastEl && lastEl.classList.contains('right')) {
+                const avatarEl = lastEl.querySelector('.msg-avatar');
+                if (avatarEl) avatarEl.style.backgroundImage = `url(${this.currentSettings.myAvatar})`;
             }
-        });
+        } else {
+            const msgs = container.querySelectorAll('.chat-msg.right .msg-avatar');
+            msgs.forEach(el => el.style.backgroundImage = `url(${this.currentSettings.myAvatar})`);
+        }
     }
 };
 /* ================= 聊天室专属设置模块 JS END ================= */
