@@ -11394,8 +11394,8 @@ this.displayCount = 35;
                 }
             });
             if (hasUnread) {
-                await this.save();
-                this.render(true);
+                this.render(true); // 先立刻刷新界面
+                this.save();       // 后台保存
                 showNotification("连发消息已打包发送 ✧");
                 // 触发梦角的回复
                 if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply();
@@ -11417,21 +11417,26 @@ this.displayCount = 35;
 
     this.messages.push(newMsg);
     this.currentRole.lastMsg = "我: " + text;
-    await msgApp.save();
-    await this.save();
     
     input.value = '';
     input.blur();
-setTimeout(() => { window.scrollTo(0, 0); document.body.scrollTop = 0; }, 10);
+    
+    // 🌟【关键修复】：取消 await 阻塞，先立刻渲染让气泡上屏！
     this.render();
-        this.resetProactiveTimer();
+    setTimeout(() => { window.scrollTo(0, 0); document.body.scrollTop = 0; }, 10);
+    this.resetProactiveTimer();
+
+    // 🌟 让数据库去后台默默保存，不卡界面
+    msgApp.save();
+    this.save();
+    
     // 如果没有开连发模式，正常发出并等待回复
     if (!this.isComboMode) {
-        setTimeout(async () => {
+        setTimeout(() => {
             newMsg.isRead = true;
             this.render(true); 
             if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply(); 
-        }, 800);
+        }, 800); // 👈 如果觉得变成已读太慢，把这个 800 改成 300 或更小
     }
 },
 
@@ -11453,17 +11458,23 @@ async sendImg(input) {
 
             this.messages.push(newMsg);
             this.currentRole.lastMsg = "我: [图片]";
-            await msgApp.save();
-            await this.save();
-            this.render();
+            
             input.value = ''; 
-                        this.resetProactiveTimer();
+            
+            // 🌟【关键修复】：先立刻渲染出图片气泡！
+            this.render();
+            this.resetProactiveTimer();
+            
+            // 🌟 后台异步保存
+            msgApp.save();
+            this.save();
+            
             if (!this.isComboMode) {
-                setTimeout(async () => {
+                setTimeout(() => {
                     newMsg.isRead = true;
                     this.render(true);
                     if (!(settingsApp.config.noReply && Math.random() < 0.05)) this.triggerNpcReply(); 
-                }, 800);
+                }, 800); // 👈 同样，这里是图片变成已读的模拟延迟
             }
         };
         reader.readAsDataURL(input.files[0]);
@@ -11622,7 +11633,7 @@ if (randSpecial < 0.03) {
     let amt = 0;
     // 检查TA有没有钱，有钱才随机发钱并扣钱；没钱的话 amt 保持为 0，就会触发空包！
     if (this.currentRole.balance >= 1) {
-        let maxAmt = Math.min(this.currentRole.balance, 520); 
+        let maxAmt = Math.min(this.currentRole.balance, 5200); // 👈 这里把 520 改成 5200
         amt = Math.floor(Math.random() * maxAmt) + 1;
         this.currentRole.balance -= amt; // 扣掉真实余额
     }
@@ -13364,49 +13375,49 @@ const thoughtApp = {
 // ================= 资金系统 JS START =================
 const redPacketApp = {
     open() {
-    const role = chatApp.currentRole;
-    if (!role) return showNotification("请先进入聊天室喔~");
-    // 初始化并显示当前余额
-    if (role.balance === undefined) role.balance = 0;
-    document.getElementById('rp-balance-display').innerText = `¥ ${parseFloat(role.balance).toFixed(2)}`;
-    
-    document.getElementById('rp-modal').style.display = 'flex';
-    document.getElementById('rp-amount').value = '';
-    if(document.getElementById('rp-message')) document.getElementById('rp-message').value = ''; // 清空上次附言
-},
+        const role = chatApp.currentRole;
+        if (!role) return showNotification("请先进入聊天室喔~");
+        // 初始化并显示当前余额
+        if (role.balance === undefined) role.balance = 0;
+        document.getElementById('rp-balance-display').innerText = `¥ ${parseFloat(role.balance).toFixed(2)}`;
+        
+        document.getElementById('rp-modal').style.display = 'flex';
+        document.getElementById('rp-amount').value = '';
+        if(document.getElementById('rp-message')) document.getElementById('rp-message').value = ''; // 清空上次附言
+    },
 
-async recharge() {
-    const role = chatApp.currentRole;
-    let amt = document.getElementById('rp-amount').value;
-    amt = parseFloat(amt) || 0; 
-    
-    if (amt <= 0) return showNotification("充值金额必须大于0喔 ⨯");
-    
-    // 增加金库余额并保存
-    if (role.balance === undefined) role.balance = 0;
-    role.balance += amt;
-    await msgApp.save();
-    
-    document.getElementById('rp-modal').style.display = 'none';
-    
-    const sysText = `✎ 你为 ${role.name} 的金库注入了 ¥${amt} ✧`;
-    chatApp.messages.push({ id: Date.now(), isMe: false, type: 'system', text: sysText, time: chatApp.getFormattedTime() });
-    await chatApp.save();
-    chatApp.render();
-},
+    async recharge() {
+        const role = chatApp.currentRole;
+        let amt = document.getElementById('rp-amount').value;
+        amt = parseFloat(amt) || 0; 
+        
+        if (amt <= 0) return showNotification("充值金额必须大于0喔 ⨯");
+        
+        // 增加金库余额并保存
+        if (role.balance === undefined) role.balance = 0;
+        role.balance += amt;
+        await msgApp.save();
+        
+        document.getElementById('rp-modal').style.display = 'none';
+        
+        const sysText = `✎ 你为 ${role.name} 的金库注入了 ¥${amt} ✧`;
+        chatApp.messages.push({ id: Date.now(), isMe: false, type: 'system', text: sysText, time: chatApp.getFormattedTime() });
+        await chatApp.save();
+        chatApp.render();
+    },
 
-async send() {
-    const role = chatApp.currentRole;
-    let amt = document.getElementById('rp-amount').value;
-    amt = parseFloat(amt) || 0; 
-    
-    // 获取你写的附言
-    let msgText = "";
-    if(document.getElementById('rp-message')) msgText = document.getElementById('rp-message').value.trim();
-    
-    document.getElementById('rp-modal').style.display = 'none';
+    async send() {
+        const role = chatApp.currentRole;
+        let amt = document.getElementById('rp-amount').value;
+        amt = parseFloat(amt) || 0; 
+        
+        // 获取你写的附言
+        let msgText = "";
+        if(document.getElementById('rp-message')) msgText = document.getElementById('rp-message').value.trim();
+        
+        document.getElementById('rp-modal').style.display = 'none';
 
-    const newMsg = { id: Date.now(), isMe: true, type: 'red_packet', amount: amt, message: msgText, time: chatApp.getFormattedTime(), isRead: true };
+        const newMsg = { id: Date.now(), isMe: true, type: 'red_packet', amount: amt, message: msgText, time: chatApp.getFormattedTime(), isRead: true };
         chatApp.messages.push(newMsg);
         await chatApp.save();
         chatApp.render();
@@ -13434,35 +13445,44 @@ async send() {
             }
 
             chatApp.messages.push({ id: Date.now(), isMe: false, type: 'system', text: sysText, time: chatApp.getFormattedTime() });
-        await chatApp.save();
-        chatApp.render();
-        
-        // 👇 领完红包或收到空包后，像平时一样抽字卡回复（受已读不回概率控制）
-        if (!(settingsApp.config.noReply && Math.random() < 0.05)) {
-            chatApp.triggerNpcReply();
-        }
-    }, 2000 + Math.random() * 1500);
-},
+            await chatApp.save();
+            chatApp.render();
+            
+            // 👇 领完红包或收到空包后，像平时一样抽字卡回复（受已读不回概率控制）
+            if (!(settingsApp.config.noReply && Math.random() < 0.05)) {
+                chatApp.triggerNpcReply();
+            }
+        }, 2000 + Math.random() * 1500);
+    },
     
     async clickPacket(msgId) {
         const role = chatApp.currentRole;
         const msg = chatApp.messages.find(m => m.id === msgId);
         if (!msg) return;
         
+        // 🌟 修复 Bug：拦截已经拆开过的红包
+        if (msg.isOpened) {
+            return showNotification(msg.isMe ? "你已经查看过这张票据啦 ✧" : "这张票据你已经收取过啦，不能重复领喔 ⨯");
+        }
+        
+        // 🌟 标记红包已被拆开
+        msg.isOpened = true;
+
         if (!msg.isMe) {
             // 我们点开 TA 发的红包
             if (msg.amount > 0) {
                 showNotification(`收取了 ${role.name} 的资金 (¥${msg.amount})! ♡`);
-                chatApp.messages.push({ id: Date.now(), isMe: false, type: 'system', text: `✎ 你美滋滋地收下了 ${role.name} 的转账`, time: chatApp.getFormattedTime() });
+                chatApp.messages.push({ id: Date.now(), isMe: false, type: 'system', text: `✎ 你美滋滋地收下了 ${role.name} 的转账 (¥${msg.amount})`, time: chatApp.getFormattedTime() });
             } else {
                 showNotification(`这居然是个空包！`);
                 chatApp.messages.push({ id: Date.now(), isMe: false, type: 'system', text: `✎ 你拆开票据，发现 ${role.name} 给你发了个寂寞...`, time: chatApp.getFormattedTime() });
             }
-            await chatApp.save();
-            chatApp.render();
         } else {
             showNotification(msg.amount > 0 ? `你开出了一张 ¥${msg.amount} 的资金票据` : '你开出了一张恶作剧空包');
         }
+        
+        await chatApp.save();
+        chatApp.render();
     },
 
     async npcSendPacket() {
@@ -13470,9 +13490,9 @@ async send() {
         if (role.balance === undefined) role.balance = 0;
         
         let amt = 0;
-        // 如果他有钱，随机发一笔 (1元 到 他的所有余额，最高520)
+        // 如果他有钱，随机发一笔 (1元 到 他的所有余额，最高5200)
         if (role.balance >= 1) {
-            let maxAmt = Math.min(role.balance, 520);
+            let maxAmt = Math.min(role.balance, 5200); 
             amt = Math.floor(Math.random() * maxAmt) + 1;
             role.balance -= amt; // 把钱扣掉
             await msgApp.save();
