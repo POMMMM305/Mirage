@@ -11416,18 +11416,20 @@ this.displayCount = 35;
     this.messages.push(newMsg);
     this.currentRole.lastMsg = "我: " + text;
     
-    // 🌟 1. 清空输入框，但绝不执行 input.blur()，让键盘稳稳保持弹起！
-    input.value = '';
-    
-    // 🌟 2. 瞬间渲染气泡上屏！
+    // 🌟 1. 清空输入框
+input.value = '';
+
+// 🌟 2. 核心防卡顿：把渲染任务推迟到浏览器下一帧，让输入框瞬间响应不卡键盘！
+requestAnimationFrame(() => {
     this.render();
     this.resetProactiveTimer();
-
-    // 🌟 3. 把沉重的数据库保存操作扔到下一帧，绝对不卡界面！
+    
+    // 🌟 3. 数据库保存放到渲染完成后
     setTimeout(() => {
         msgApp.save();
         this.save();
     }, 50);
+});
     
     // 如果没有开连发模式，正常发出并等待回复
     if (!this.isComboMode) {
@@ -11716,13 +11718,16 @@ render(autoScroll = true) {
     const oldScrollHeight = container.scrollHeight; 
     container.innerHTML = '';
     
+    // 👇新增：准备一个虚拟口袋
+    const fragment = document.createDocumentFragment();
+
 // 1. 判断是否需要显示“查看更多”按钮 (原本写死的style替换成className)
 if (this.messages.length > this.displayCount) {
     const loadMoreBtn = document.createElement('div');
     loadMoreBtn.innerText = '⟳ 查看更早的消息...';
     loadMoreBtn.className = 'chat-load-more-btn'; // 👈 替换在这里
     loadMoreBtn.onclick = () => this.loadMore();
-    container.appendChild(loadMoreBtn);
+    fragment.appendChild(loadMoreBtn);
 }
 
     // 2. 截取最后 displayCount 条消息
@@ -11745,7 +11750,7 @@ if (msg.type === 'system') {
             ${msg.text}
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return; // 结束当前循环
 }
         
@@ -11762,7 +11767,7 @@ if (msg.isRecalled) {
         <div class="msg-recall-sys">⟲ ${roleName} 撤回了一条消息</div>
         <div class="msg-recall-content">${recallText}</div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return; // 结束当前循环，不渲染原本的普通气泡
 }
 
@@ -11800,7 +11805,7 @@ if (msg.type === 'signal' || msg.type === 'signal_ans') {
             ${decodeHTML}
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -11828,7 +11833,7 @@ if (msg.type === 'decision_ask') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -11858,7 +11863,7 @@ if (msg.type === 'decision_ans') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -11881,7 +11886,7 @@ if (msg.type === 'tacit_ask') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -11918,7 +11923,7 @@ if (msg.type === 'tacit_ans') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -11973,7 +11978,7 @@ if (msg.type === 'thought') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -12020,7 +12025,7 @@ if (msg.type === 'red_packet') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return; 
 }
 
@@ -12058,7 +12063,7 @@ if (msg.type === 'recipe') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -12086,7 +12091,7 @@ if (msg.type === 'anniversary') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -12115,7 +12120,7 @@ if (msg.type === 'memo_alert') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -12142,7 +12147,7 @@ if (msg.type === 'diary_invite') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -12182,7 +12187,7 @@ if (msg.type === 'tarot') {
             </div>
         </div>
     `;
-    container.appendChild(el);
+    fragment.appendChild(el);
     return;
 }
 
@@ -12253,11 +12258,14 @@ if (msg.type === 'tarot') {
                 ${decodeHTML}
             </div>
         `;
-        container.appendChild(el);
+        fragment.appendChild(el);
     });
 
-    // 4. 滚动控制
-    if (autoScroll === true) {
+    // 👇防卡顿核心：将内存里拼好的几十个气泡，一次性重绘到屏幕上！
+container.appendChild(fragment);
+
+// 4. 滚动控制
+if (autoScroll === true) {
         // 取消延迟，直接瞬间滚到底部
         container.scrollTop = container.scrollHeight;
         setTimeout(() => { container.scrollTop = container.scrollHeight; }, 10);
@@ -12497,6 +12505,31 @@ chatApp.deleteMulti = async function() {
 /* ================= 传讯功能 JS END ================= */
 
 /* ================= 表情包系统 JS START ================= */
+// 👇表情包专属压缩引擎（保持透明底且极小）
+function compressEmoji(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                let w = img.width, h = img.height;
+                // 表情包非常小，限制最大宽度为 300 像素就足够清晰了
+                if (w > 300) { h = Math.round((h * 300) / w); w = 300; }
+                const canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                // 注意：这里不填白色背景，直接画，为了保留表情包的透明底！
+                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                // 压缩成 webp 格式（保留透明且体积只有几KB）
+                resolve(canvas.toDataURL('image/webp', 0.8)); 
+            };
+            img.onerror = () => resolve(e.target.result); // 如果失败就原图直出兜底
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+}
+// 👆压缩引擎结束
+
 const emojiApp = {
     emojis: [],
     isEditing: false,
@@ -12563,26 +12596,25 @@ const emojiApp = {
         this.render();
     },
 
-    addLocalStickers(input) {
-        if (input.files && input.files.length > 0) {
-            let loadedCount = 0;
-            const total = input.files.length;
-            Array.from(input.files).forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    this.emojis.unshift({ id: Date.now() + index, src: e.target.result });
-                    loadedCount++;
-                    if (loadedCount === total) {
-                        await this.save();
-                        this.render();
-                        showNotification(`成功导入 ${total} 张本地表情 ✧`);
-                    }
-                };
-                reader.readAsDataURL(file);
-            });
-            input.value = ''; // 清空方便下次选择
+    async addLocalStickers(input) {
+    if (input.files && input.files.length > 0) {
+        const total = input.files.length;
+        // 弹出提示防止用户觉得卡死了
+        showNotification(`正在压缩处理 ${total} 张表情...`);
+        
+        for (let i = 0; i < total; i++) {
+            const file = input.files[i];
+            // 核心：等图片压缩完只有几KB了，再存进去
+            const compressedBase64 = await compressEmoji(file);
+            this.emojis.unshift({ id: Date.now() + i, src: compressedBase64 });
         }
-    },
+        
+        await this.save();
+        this.render();
+        showNotification(`成功导入 ${total} 张本地表情 ✧`);
+        input.value = ''; // 清空方便下次选择
+    }
+},
 
     async addUrlStickers() {
     const text = document.getElementById('emoji-url-input').value.trim();
