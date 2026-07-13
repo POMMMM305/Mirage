@@ -2865,6 +2865,78 @@ body.dark-mode.ui-jelly .b-theme-default .chat-msg.right .msg-bubble {
     background: #6c98c6 !important;
 }
 
+/* ================= 🧊 海盐果冻(Jelly) 专属脑电波卡片美化 ================= */
+
+/* 1. 卡片主体：彻底玻璃化、冰透化 */
+body.ui-jelly .thought-msg-box {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(220, 238, 251, 0.6) 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 20px rgba(127, 177, 234, 0.1), inset 0 2px 4px rgba(255, 255, 255, 1) !important;
+    padding: 16px !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    background-image: none !important;
+    margin-top: 15px !important;
+}
+
+/* 2. 暴力撕掉碍眼的黑胶带标签，不需要它 */
+body.ui-jelly .thought-tag {
+    display: none !important; 
+}
+
+/* 3. 头部信息：无底线悬浮文字 */
+body.ui-jelly .thought-header {
+    border-bottom: none !important;
+    color: #88a3c2 !important;
+    font-weight: bold !important;
+}
+body.ui-jelly .thought-header span[style*="color"] {
+    color: var(--theme-accent) !important; 
+}
+
+/* 4. 内部方块字：变成晶莹剔透的水晶果冻块 */
+body.ui-jelly .thought-msg-box span[style*="border"] {
+    border: none !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+    box-shadow: 0 2px 8px rgba(144, 184, 230, 0.15), inset 0 1px 3px rgba(255,255,255,1) !important;
+    border-radius: 12px !important; 
+    color: var(--theme-main) !important;
+    font-weight: 900 !important;
+    padding: 6px 12px !important;
+}
+
+/* 5. 目标词：变成浅色半透背景托底 */
+body.ui-jelly .thought-target {
+    color: var(--theme-main) !important;
+    text-shadow: none !important;
+    border-bottom: none !important; 
+    background: rgba(255,255,255,0.6) !important;
+    padding: 4px 10px !important;
+    border-radius: 10px !important;
+}
+body.ui-jelly .thought-msg-box div[style*="dashed"] {
+    border: none !important;
+}
+
+/* 6. 条形码抹杀 */
+body.ui-jelly .thought-msg-box div[style*="repeating-linear-gradient"] {
+    display: none !important;
+}
+
+/* 7. 果冻夜间模式深度变色 */
+body.dark-mode.ui-jelly .thought-msg-box {
+    background: linear-gradient(135deg, rgba(42, 47, 56, 0.9) 0%, rgba(30, 34, 41, 0.8) 100%) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3), inset 0 1px 3px rgba(255,255,255,0.05) !important;
+}
+body.dark-mode.ui-jelly .thought-msg-box span[style*="border"],
+body.dark-mode.ui-jelly .thought-target {
+    background: rgba(0, 0, 0, 0.2) !important;
+    color: #d4d4d4 !important;
+    box-shadow: none !important;
+}
+
 /* ================= 紧急修复补丁：追加到底部强行生效 ================= */
 
 /* 2. 找回丢失的日期切换胶囊按钮 (前一天/后一天/上下月) */
@@ -6303,6 +6375,82 @@ body.ui-shoujo .icon-box:active .icon-label {
     transform: scale(0.95) !important;
 }
 
+/* ================= 🎀 少女漫(Shoujo) 专属脑电波卡片美化 ================= */
+
+/* 1. 卡片主体：变身软乎乎的云朵虚线框 */
+body.ui-shoujo .thought-msg-box {
+    background: #ffffff !important;
+    border: 2px dashed #ffb7c5 !important;
+    border-radius: 20px !important; /* 极致圆润 */
+    box-shadow: 0 4px 15px rgba(255, 183, 197, 0.15) !important;
+    padding: 18px 16px 16px 16px !important;
+    margin-top: 15px !important;
+    background-image: none !important; /* 清理掉原版点阵 */
+}
+
+/* 2. 左上角黑胶带：变成粉白小药丸标签 */
+body.ui-shoujo .thought-tag {
+    background: #ffb7c5 !important;
+    color: #fff !important;
+    border: 2px solid #fff !important;
+    border-radius: 20px !important;
+    top: -12px !important;
+    left: 15px !important;
+    transform: rotate(-3deg) !important;
+    padding: 2px 12px !important;
+    box-shadow: 0 2px 8px rgba(255,183,197,0.4) !important;
+    font-size: 0 !important; /* 藏掉粗犷的原英文 */
+}
+body.ui-shoujo .thought-tag::after {
+    content: '✧ THOUGHT' !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    letter-spacing: 1px !important;
+}
+
+/* 3. 头部信息：柔化 */
+body.ui-shoujo .thought-header {
+    border-bottom: 2px dotted #ffb7c5 !important;
+    color: #ffa8b6 !important;
+    font-weight: bold !important;
+    padding-bottom: 8px !important;
+}
+body.ui-shoujo .thought-header span[style*="color"] {
+    color: #ff8fa3 !important; /* [SIGNAL] 变温柔 */
+}
+
+/* 4. 内部方块字：变成可爱的小贴纸 */
+body.ui-shoujo .thought-msg-box span[style*="border"] {
+    border: 2px solid #ffb7c5 !important;
+    border-radius: 8px !important;
+    background: #fff5f7 !important;
+    color: #d63384 !important;
+    font-weight: 900 !important;
+}
+
+/* 5. 目标词：依然粉嫩但去死板 */
+body.ui-shoujo .thought-target {
+    color: #d63384 !important;
+    border-bottom: 2px dashed #ffb7c5 !important;
+    text-shadow: none !important;
+}
+/* 强行抹去下面残留的粗黑虚线 */
+body.ui-shoujo .thought-msg-box div[style*="dashed"] {
+    border: none !important;
+}
+
+/* 6. 条形码抹杀 */
+body.ui-shoujo .thought-msg-box div[style*="repeating-linear-gradient"] {
+    display: none !important;
+}
+
+/* 7. 少女漫夜间模式适配 */
+body.dark-mode.ui-shoujo .thought-msg-box {
+    background: #1e2229 !important;
+    border-color: #555 !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+}
+
 /* ========================================================
    WABI-SABI (侘寂风) THEME - 传讯界面 (Header & Footer)
 ======================================================== */
@@ -8269,6 +8417,89 @@ body.ui-wabi .notification {
 body.dark-mode.ui-wabi .notification {
     background-color: #121418 !important;
     border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #8c867f !important;
+}
+
+/* ================= 侘寂风(Wabi-Sabi) 专属脑电波卡片净化 ================= */
+
+/* 1. 卡片主体：剥除点阵背景、粗黑框、大阴影 */
+body.ui-wabi .thought-msg-box {
+    background: transparent !important;
+    background-image: none !important;
+    border: 1px solid rgba(62, 58, 53, 0.15) !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 16px !important;
+    margin-top: 15px !important;
+}
+
+/* 2. 左上角黑胶带：降维打击成安静的居中汉字标题 */
+body.ui-wabi .thought-tag {
+    background: transparent !important;
+    color: #8c867f !important;
+    border: none !important;
+    transform: none !important;
+    position: relative !important;
+    display: block !important;
+    top: auto !important; 
+    left: auto !important;
+    padding: 0 0 10px 0 !important;
+    border-bottom: 1px solid rgba(62, 58, 53, 0.1) !important;
+    text-align: center !important;
+    margin-bottom: 12px !important;
+    font-size: 0 !important; /* 隐藏原英文 "SUDDEN THOUGHT" */
+}
+body.ui-wabi .thought-tag::after {
+    content: '心 之 所 念' !important; /* 替换成宁静的汉字 */
+    font-size: 10px !important;
+    font-weight: 300 !important;
+    letter-spacing: 4px !important;
+}
+
+/* 3. 头部信息：抹杀红色的 [SIGNAL] 和虚线 */
+body.ui-wabi .thought-header {
+    border-bottom: none !important; 
+    color: #8c867f !important;
+    font-weight: 300 !important;
+}
+body.ui-wabi .thought-header span[style*="color"] {
+    color: #5c5751 !important; /* 把红色强制压成茶灰色 */
+    font-weight: 300 !important;
+}
+
+/* 4. 内部方块字 (想 ⨯ 换掉)：去粗框变细框 */
+body.ui-wabi .thought-msg-box span[style*="border"] {
+    border: 1px solid rgba(62, 58, 53, 0.2) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    color: #3e3a35 !important;
+    font-weight: 300 !important;
+    box-shadow: none !important;
+}
+
+/* 5. 底部目标词 (主页)：抹杀亮粉色加粗虚线，变为深灰单实线 */
+body.ui-wabi .thought-target {
+    color: #2c2a28 !important; 
+    font-weight: 300 !important;
+    text-shadow: none !important;
+    border-bottom: 1px solid rgba(62, 58, 53, 0.3) !important; 
+}
+/* 防止写死的红色虚线漏网 */
+body.ui-wabi .thought-msg-box div[style*="dashed"] {
+    border-bottom: 1px solid rgba(62, 58, 53, 0.1) !important;
+}
+
+/* 6. 隐藏右下角的出戏条形码 */
+body.ui-wabi .thought-msg-box div[style*="repeating-linear-gradient"] {
+    display: none !important;
+}
+
+/* 7. 侘寂夜间模式微调 */
+body.dark-mode.ui-wabi .thought-msg-box {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+body.dark-mode.ui-wabi .thought-tag::after,
+body.dark-mode.ui-wabi .thought-header {
     color: #8c867f !important;
 }
 
