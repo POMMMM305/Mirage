@@ -8253,6 +8253,25 @@ body.ui-wabi .ticket-barcode {
     display: none !important; /* 抹去条形码 */
 }
 
+/* ================= 侘寂风(Wabi-Sabi) 专属通知弹窗美化 ================= */
+body.ui-wabi .notification {
+    background-color: #f2efe9 !important; /* 极其素雅的宣纸底色 */
+    border: 1px solid rgba(62, 58, 53, 0.2) !important; /* 极细的茶褐色边框 */
+    box-shadow: none !important; /* 彻底抹杀厚重的黑阴影 */
+    border-radius: 0 !important; /* 绝对直角，拒绝圆滑 */
+    color: #5c5751 !important; /* 褪色感的深茶灰字体 */
+    font-weight: 300 !important; /* 纤细的字重 */
+    letter-spacing: 2px !important; /* 增加字间距，提升呼吸感 */
+    padding: 12px 24px !important; /* 拉开一点留白 */
+}
+
+/* 侘寂风 - 夜间模式通知弹窗 */
+body.dark-mode.ui-wabi .notification {
+    background-color: #121418 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #8c867f !important;
+}
+
 /* ========================================================= */
 /*   🛠️ 紧急补丁：修复海盐蓝 & 侘寂风图标与桌面偏右撑爆的问题 */
 /* ========================================================= */
@@ -15699,26 +15718,30 @@ loadAll = async function() {
 /* ================= 通知与弹窗系统 JS START ================= */
 function testAutoMsgPopup() {
     if (!("Notification" in window)) {
-        showNotification("您的浏览器不支持系统通知喔");
+        alert("抱歉，您的浏览器不支持后台系统通知喔");
         return;
     }
     
     // 申请手机通知权限
     Notification.requestPermission().then(perm => {
         if (perm === "granted") {
-            // 如果同意了，尝试通过 sw.js 发送一条真实的系统通知
+            // 👉 直接拉起手机操作系统的真实悬浮窗通知
+            new Notification("测试成功 ✧", {
+                body: "通知权限已开启！退到后台也能收到TA的消息啦~",
+                icon: './icon.png' // 如果没设图标会显示浏览器默认图标
+            });
+            
+            // 兼容部分安卓自带浏览器的后台 Service Worker 推送
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(reg => {
-                    reg.showNotification("测试成功！", {
-                        body: "通知权限已开启！切到后台也能收到TA的消息啦~",
-                        icon: './icon.png',
-                        vibrate: [200, 100, 200]
+                    reg.showNotification("测试成功 ✧", {
+                        body: "通知权限已开启！退到后台也能收到TA的消息啦~",
+                        vibrate: [200, 100, 200] // 让手机震动
                     });
                 });
             }
-            showNotification("权限已开启，请查看手机通知栏！");
         } else {
-            showNotification("权限被拒绝，请在手机系统设置里允许浏览器的通知权限。");
+            alert("权限被拒绝！请去手机【设置】-【应用管理】中允许浏览器的【通知权限】喔");
         }
     });
 }
