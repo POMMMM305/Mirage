@@ -8253,6 +8253,62 @@ body.ui-wabi .ticket-barcode {
     display: none !important; /* 抹去条形码 */
 }
 
+/* ========================================================= */
+/*   🛠️ 紧急补丁：修复海盐蓝 & 侘寂风图标与桌面偏右撑爆的问题 */
+/* ========================================================= */
+
+/* 1. 强制锁死应用网格，防止文字过长把四个格子往右推爆 */
+.apps-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    justify-content: center !important;
+}
+
+/* 2. 保证每个图标盒子绝对居中，不允许乱跑 */
+.icon-box {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    overflow: visible !important;
+}
+
+/* 3. 允许小字标签内容稍微长一点，但绝不允许它拉扯整个屏幕的宽度 */
+.icon-label {
+    max-width: 140% !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    word-wrap: normal !important;
+}
+
+/* 4. 修复侘寂风(ui-wabi)去除外框后，图标没有定死宽高而在格子里偏移的问题 */
+body.ui-wabi .icon-img {
+    width: 48px !important;
+    height: 48px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+}
+
+/* 5. 强制锁死桌面上所有小组件卡片，解决第二页也被向右边撑开偏移的问题 */
+.widget-integrated, 
+.widget-captcha, 
+.widget-square, 
+.widget-chat, 
+.widget-ticket, 
+.widget-search {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 强制允许第二页的票据或对话框文字一旦过长就自动换行，斩断隐形拉宽 */
+.ticket-right, .chat-bubble {
+    word-wrap: break-word !important;
+    word-break: break-all !important;
+}
+
 /* ================= 美化模块 CSS END ================= */
 </style>
 
@@ -8527,10 +8583,17 @@ if ('serviceWorker' in navigator) {
                 </div>
             </div>
             
-            <!-- 批量导入 -->
+            <!-- 批量导入与数据管理 -->
             <div class="fc-box" style="display:flex; flex-direction:column;">
-                <label style="font-size:10px; font-weight:bold; z-index:2; margin-bottom:8px;">+ 批量导入 (一行一个)</label>
-                <textarea id="fc-import-text" class="fc-textarea" placeholder="在此输入内容...&#10;按回车键换行，即可批量导入"></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; z-index:2;">
+                    <label style="font-size:10px; font-weight:bold;">+ 批量导入 / 备份</label>
+                    <div style="display:flex; gap:8px;">
+                        <button class="fc-btn-outline" style="padding:2px 8px; font-size:10px;" onclick="fcApp.exportCards()">导出字卡 ↓</button>
+                        <button class="fc-btn-outline" style="padding:2px 8px; font-size:10px;" onclick="document.getElementById('fc-file-import').click()">导入文件 ↑</button>
+                        <input type="file" id="fc-file-import" accept=".txt,.json,.csv" style="display:none;" onchange="fcApp.importFromFile(this)">
+                    </div>
+                </div>
+                <textarea id="fc-import-text" class="fc-textarea" placeholder="在此输入内容...&#10;按回车键换行，即可批量添加"></textarea>
                 <button class="fc-btn" onclick="fcApp.importCards()" style="align-self:flex-end;">+ 添加</button>
             </div>
 
@@ -8572,7 +8635,7 @@ if ('serviceWorker' in navigator) {
                     <span>最长回复时间</span>
                     <div style="display:flex; align-items:center; gap:6px;">
                         <span id="val-max-time" class="st-val">30.0s</span>
-                        <input type="range" id="st-max-time" class="st-range" min="0.1" max="30.0" step="0.1" value="30.0" oninput="settingsApp.update()">
+                        <input type="range" id="st-max-time" class="st-range" min="0.1" max="120.0" step="0.1" value="30.0" oninput="settingsApp.update()">
                     </div>
                 </div>
 <div class="st-row">
@@ -10309,6 +10372,103 @@ const fcApp = {
         } else { showNotification("请先勾选需要移动的字卡 ⨯"); }
     },
 
+async importFromFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        // 强制限制：拒绝 txt 等乱七八糟的格式，只允许导入 JSON 文件
+        if (!file.name.toLowerCase().endsWith('.json')) {
+            showNotification("只支持导入 .json 格式的字卡文件喔 ⨯");
+            input.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const content = e.target.result;
+                let importedCount = 0;
+                const parsed = JSON.parse(content);
+                let cardsToImport = [];
+                let groupsToImport = [];
+                
+                // 【核心：智能多通道解析引擎】
+                // 1. 兼容当前官方 Mirage 专属格式
+                if (parsed.type === 'MirageFlashcardsBackup' && Array.isArray(parsed.data)) {
+                    cardsToImport = parsed.data;
+                    if (parsed.groups) groupsToImport = parsed.groups;
+                } 
+                // 2. 兼容纯数组格式 (即《痕迹字卡》单独导出的纯字卡)
+                else if (Array.isArray(parsed)) {
+                    cardsToImport = parsed;
+                } 
+                // 3. 兼容《痕迹字卡》的【全局数据大备份包】 (精准提取藏在 parsed.cards 里的字卡)
+                else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.cards)) {
+                    cardsToImport = parsed.cards;
+                }
+                // 4. 兼容 YumeChatPro 等全量备份包 (精准提取 wordCards)
+                else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.wordCards)) {
+                    cardsToImport = parsed.wordCards;
+                }
+                // 5. 兼容带 data 数组的其他备份包
+                else if (parsed && typeof parsed === 'object' && Array.isArray(parsed.data)) {
+                    cardsToImport = parsed.data;
+                }
+                else {
+                    throw new Error("无法识别的字卡 JSON 格式");
+                }
+                
+                // 严格过滤：确保里面真的有 text 文本，防止导入空卡片报错
+                cardsToImport = cardsToImport.filter(card => card && card.text && String(card.text).trim() !== '');
+
+                if (cardsToImport.length === 0) {
+                    showNotification("文件里好像没有有效的字卡内容喔 ⨯");
+                    input.value = ''; 
+                    return;
+                }
+
+                const ok = await showCustomConfirm(`检测到有效数据 ${cardsToImport.length} 张字卡。\n要将它们合并导入到当前字卡库吗？`);
+                if (!ok) { input.value = ''; return; }
+                
+                // 合并官方格式的分组
+                if (groupsToImport.length > 0) {
+                    this.groups = [...new Set([...this.groups, ...groupsToImport])].filter(Boolean);
+                }
+                
+                // 开始批量吸入数据，并向下兼容《痕迹字卡》的字段
+                cardsToImport.forEach((item, index) => {
+                    const groupName = item.group || item.category || '未分组';
+                    
+                    // 神奇小细节：把《痕迹字卡》里自带的分组，自动收录进当前系统里
+                    if (groupName !== '未分组' && !this.groups.includes(groupName)) {
+                        this.groups.push(groupName);
+                    }
+                    
+                    this.data.unshift({
+                        id: Date.now() + index, // 重新生成ID防冲突
+                        text: String(item.text).trim(),
+                        selected: false,
+                        group: groupName,
+                        category: item.category || groupName // 无缝对接
+                    });
+                    importedCount++;
+                });
+
+                if (importedCount > 0) {
+                    await this.save();
+                    this.render();
+                    showNotification(`成功吸收并导入 ${importedCount} 张字卡 ✧`);
+                }
+
+            } catch (err) {
+                showNotification("导入读取失败：请确保这是一个正确的字卡 JSON 文件 ⨯");
+            } finally {
+                input.value = ''; 
+            }
+        };
+        reader.readAsText(file);
+    },
+    
     async importCards() {
         const textVal = document.getElementById('fc-import-text').value;
         if (!textVal.trim()) return;
