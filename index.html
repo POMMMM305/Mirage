@@ -259,6 +259,40 @@ body {
     .editing .int-name, .editing .int-sign, .editing .int-music-title, .editing .widget-search, .editing #captcha-text, .editing #chat-text, .editing #ticket-text, .editing #tape-1-text, .editing #tape-2-text, .editing #square-sign-text { border-bottom: 1px dashed var(--theme-accent); color: var(--theme-accent);}
     .editing .icon-label { border-color: var(--theme-accent); color: var(--theme-accent); border-radius: 4px; }
 
+/* ================= 全局悬浮提示框 (Toast) 基础骨架 ================= */
+.notification {
+    position: absolute !important;
+    bottom: 12% !important; /* 悬浮在偏下方，避开底栏 */
+    left: 50% !important; /* 强制水平居中 */
+    transform: translateX(-50%) !important;
+    background: rgba(43, 43, 43, 0.85); /* 默认黑底半透明 */
+    color: #ffffff;
+    padding: 10px 22px;
+    border-radius: 999px; /* 胶囊圆角 */
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    z-index: 10000 !important; /* 层级拉满，绝不被遮挡 */
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(4px);
+    pointer-events: none; /* 防止挡住底下的按钮 */
+    white-space: nowrap; /* 强制不换行 */
+    animation: toastFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes toastFadeIn {
+    0% { opacity: 0; transform: translate(-50%, 15px); }
+    100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* 适配原生夜间模式 */
+body.dark-mode .notification {
+    background: rgba(255, 255, 255, 0.9);
+    color: #121212;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
     /* ================= 弹窗 ================= */
     #edit-modal { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(255,255,255,0.7); z-index: 999; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
     .modal-content { background: #ffffff; padding: 26px 22px; width: 85%; max-width: 320px; display: flex; flex-direction: column; gap: 16px; border: 1px solid var(--theme-main) ; position: relative; }
@@ -606,8 +640,12 @@ body.dark-mode .msg-signal-box::before { color: #555; }
     .chat-msg.left { align-self: flex-start; }
     .chat-msg.right { align-self: flex-end; align-items: flex-end; }
     .msg-time { font-size: 9px; font-weight: bold; color: var(--theme-main) ; letter-spacing: 1px; background: transparent; padding: 1px 6px; width: fit-content; border-bottom: 1px dotted var(--theme-main) ; margin-bottom: 12px; }
-/* 👇 新增这一句，强制让右侧（我方）的时间戳靠右对齐 */
-.chat-msg.right .msg-time { align-self: flex-end; }
+    /* 让右侧（我方）的消息容器内部元素全部靠右对齐 */
+.chat-msg.right .msg-inner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
     .msg-content-wrap { display: flex; gap: 10px; align-items: flex-start; position: relative; }
     .chat-msg.right .msg-content-wrap { flex-direction: row-reverse; }
     .msg-avatar { flex-shrink: 0; width: 38px; height: 38px; border: 2px solid var(--theme-main) ; background-size: cover; background-position: center; background-color: #f5f5f5; border-radius: 5px;}
@@ -1335,6 +1373,21 @@ body.dark-mode .decode-inline-box {
     background: rgba(255,255,255,0.05); 
     color: #aaa; 
 }
+
+/* ================= 潜意识脑电波卡片基础样式 ================= */
+.thought-msg-box {
+    background: #fff;
+    border: 2px solid var(--theme-main);
+    padding: 12px 14px;
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 rgba(43,43,43,0.05);
+    position: relative; /* 👈 就是少了这一句，导致标签乱飞错位 */
+    min-width: 180px;
+    margin-top: 5px;
+    background-image: radial-gradient(#eaeaea 1px, transparent 1px);
+    background-size: 10px 10px;
+}
+
     /* --- 修复夜间模式下的白底漏网之鱼 --- */
     
     /* 修复第二页拍立得相纸夜间模式发白问题 */
@@ -1981,13 +2034,6 @@ body.dark-mode .b-theme-film .chat-msg.right .msg-bubble { background: #aaa !imp
 body.dark-mode .b-theme-glass .msg-bubble { background: rgba(30,30,30,0.5) !important; border-color: rgba(255,255,255,0.1) !important; box-shadow: 0 8px 20px rgba(0,0,0,0.2) !important; color: #eee !important; }
 body.dark-mode .b-theme-glass .chat-msg.right .msg-bubble { background: rgba(40,40,45,0.5) !important; }
 body.dark-mode .b-theme-glass .chat-tape { background: rgba(0,0,0,0.3) !important; border-color: rgba(255,255,255,0.05) !important; color: #ccc !important; }
-
-/* --- 强制右侧时间戳靠右修复补丁 --- */
-.chat-msg.right .msg-time {
-    align-self: flex-end !important;
-    margin-left: auto !important;
-    text-align: right !important;
-}
 
 /* ================= 桌面小组件彻底变形 CSS (黑白高级版) ================= */
 
@@ -5755,15 +5801,19 @@ body.ui-shoujo #diary-app .msg-header > div:last-child::after {
     color: #ffffff !important;
 }
 
-/* 2. 顺手预防一下，如果字卡(Flashcard)右上角也中招了，一起修好 */
+/* 2. 修正：字卡页右上角就是资料库标题，卸掉它身上的假按钮伪装！ */
 body.ui-shoujo #flashcard-app .fc-header > div:last-child {
-    background: linear-gradient(135deg, #ff8fa3 0%, #ffb7c5 100%) !important;
-    border-color: #ffffff !important;
-    box-shadow: 0 4px 10px rgba(255, 183, 197, 0.4) !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    font-size: 14px !important; /* 恢复正常标题字号 */
+    color: #d63384 !important; /* 恢复少女粉字体颜色 */
+    width: auto !important;
+    padding: 0 !important;
 }
 body.ui-shoujo #flashcard-app .fc-header > div:last-child::after {
-    content: '新建 ✧' !important;
-    color: #ffffff !important;
+    display: none !important; /* 抹杀掉硬塞进去的“新建”文字 */
+    content: none !important;
 }
 
 /* ========================================================= */
@@ -10218,6 +10268,1771 @@ body.ui-kawaii .search-btn {
     font-weight: 800 !important;
 }
 
+/* ============================================================ */
+/* 🦇 粉彩哥特 (Pastel Goth) 专属主题 CSS - 传讯与聊天模块 🦇 */
+/* ============================================================ */
+
+/* 1. 全局背景与基础文字：深紫黑底 + 薰衣草紫文字 */
+body.ui-goth #msg-list-app,
+body.ui-goth #chat-room-app {
+    background-color: #1a1225 !important;
+    background-image: 
+        linear-gradient(rgba(212, 165, 227, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(212, 165, 227, 0.05) 1px, transparent 1px) !important;
+    background-size: 20px 20px !important;
+    color: rgba(184, 165, 245, 0.7) !important;
+}
+
+/* 2. 顶部导航栏：幽暗深邃 + 粉彩高亮 */
+body.ui-goth .msg-header,
+body.ui-goth .ch-new-header {
+    background-color: #120c1a !important;
+    border-bottom: 1px solid rgba(212, 165, 227, 0.2) !important;
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.15) !important;
+    background-image: none !important; /* 去除原本的网格叠拼 */
+}
+body.ui-goth .ch-new-header { padding-top: 40px !important; }
+
+/* 3. 按钮系统：统一圆角 (rounded-xl) + 柔光阴影 */
+body.ui-goth .msg-btn,
+body.ui-goth .ch-sys-btn,
+body.ui-goth .ch-back-tape,
+body.ui-goth .msg-fab-add {
+    background-color: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.3) !important;
+    border-radius: 12px !important; /* 严禁无圆角直角 */
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.2) !important;
+    color: #d4a5e3 !important;
+    font-weight: bold !important;
+    letter-spacing: 0.05em !important;
+    transform: none !important; /* 摆正，去掉原本的错位倾斜 */
+    transition: all 0.3s ease-in-out !important;
+}
+/* 按钮悬停/按压：光晕增强，粉色溢出 */
+body.ui-goth .msg-btn:active,
+body.ui-goth .ch-sys-btn:active,
+body.ui-goth .ch-back-tape:active,
+body.ui-goth .msg-fab-add:active {
+    transform: scale(0.95) !important;
+    box-shadow: 0 0 24px rgba(245, 165, 184, 0.4) !important;
+    border-color: rgba(245, 165, 184, 0.5) !important;
+}
+
+/* 4. 传讯列表项：发光卡片 */
+body.ui-goth .role-item {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(184, 165, 245, 0.2) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 20px rgba(184, 165, 245, 0.1) !important;
+    transform: none !important; /* 摆正 */
+}
+body.ui-goth .role-item::before { display: none !important; } /* 隐藏左上角 FILE 标签 */
+body.ui-goth .role-name {
+    color: #d4a5e3 !important;
+    border-bottom: none !important; /* 去掉虚线 */
+    font-family: sans-serif !important;
+    letter-spacing: 1px !important;
+}
+body.ui-goth .role-last { color: rgba(184, 165, 245, 0.6) !important; }
+body.ui-goth .role-avatar, 
+body.ui-goth .msg-avatar {
+    border-radius: 12px !important;
+    border: 1px solid rgba(212, 165, 227, 0.3) !important;
+    transform: none !important;
+    box-shadow: 0 0 8px rgba(212, 165, 227, 0.2) !important;
+}
+
+/* 5. 聊天室：名片重构 (取消双层错位，改为精致暗黑卡) */
+body.ui-goth .ch-profile-card {
+    background-color: #1a1225 !important;
+    border: 1px solid rgba(184, 165, 245, 0.2) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 24px rgba(184, 165, 245, 0.15) !important;
+    margin-top: 15px !important;
+}
+/* 隐藏名片上的修饰性手账元素 (胶带/图章/夹子/底网) */
+body.ui-goth .ch-profile-card::before,
+body.ui-goth .ch-profile-card::after,
+body.ui-goth .ch-stamp,
+body.ui-goth .ch-clip { display: none !important; }
+body.ui-goth .ch-name {
+    color: #d4a5e3 !important;
+    background: transparent !important; /* 去掉荧光笔底色 */
+}
+body.ui-goth .ch-avatar {
+    border-radius: 12px !important;
+    border: 1px solid rgba(212, 165, 227, 0.3) !important;
+    transform: none !important;
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.2) !important;
+}
+body.ui-goth .ch-status-slot {
+    background-color: #120c1a !important;
+    border-left: 2px solid #d4a5e3 !important;
+    border-radius: 4px !important;
+    color: rgba(184, 165, 245, 0.7) !important;
+}
+body.ui-goth .ch-status-barcode { opacity: 0.1 !important; }
+
+/* 6. 聊天室：气泡与时光档案入口 */
+body.ui-goth .ch-archive-btn {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(212, 165, 227, 0.2) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.15) !important;
+    transform: none !important; /* 摆正 */
+}
+body.ui-goth .ch-archive-btn::before { display: none !important; }
+body.ui-goth .ch-archive-icon { color: #d4a5e3 !important; }
+body.ui-goth .ch-archive-text { color: rgba(184, 165, 245, 0.7) !important; }
+
+/* 隐藏聊天室的手账胶带，保持哥特纯粹 */
+body.ui-goth .chat-tape { display: none !important; }
+
+/* 对方气泡 (左)：幽暗底色，浅紫文字 */
+body.ui-goth .chat-msg.left .msg-bubble {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(184, 165, 245, 0.2) !important;
+    border-radius: 16px !important;
+    border-top-left-radius: 4px !important;
+    box-shadow: 0 0 16px rgba(184, 165, 245, 0.1) !important;
+    color: rgba(184, 165, 245, 0.85) !important;
+}
+/* 自己气泡 (右)：微亮底色，粉紫文字 */
+body.ui-goth .chat-msg.right .msg-bubble {
+    background-color: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.3) !important;
+    border-radius: 16px !important;
+    border-top-right-radius: 4px !important;
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.2) !important;
+    color: #d4a5e3 !important;
+}
+body.ui-goth .msg-time, 
+body.ui-goth .msg-read-text {
+    color: rgba(184, 165, 245, 0.4) !important;
+    border-bottom: none !important;
+}
+body.ui-goth .msg-read-check { color: rgba(212, 165, 227, 0.6) !important; }
+
+/* 7. 聊天室：底部输入框重构 */
+body.ui-goth .cf-new-footer::before { display: none !important; } /* 隐藏底栏上划线 */
+body.ui-goth .cf-input-collage::before { display: none !important; } /* 隐藏顶部小标签 */
+
+body.ui-goth .cf-input-scrap {
+    background-color: #120c1a !important;
+    background-image: none !important; /* 去掉横线信纸背景 */
+    border: 1px solid rgba(212, 165, 227, 0.2) !important;
+    border-radius: 16px !important;
+    color: #d4a5e3 !important;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.5), 0 0 16px rgba(212, 165, 227, 0.1) !important;
+    transition: all 0.3s ease-in-out !important;
+}
+body.ui-goth .cf-input-scrap:focus {
+    border-color: rgba(245, 165, 184, 0.5) !important;
+    box-shadow: 0 0 16px rgba(245, 165, 184, 0.2) !important;
+    outline: none !important;
+}
+
+body.ui-goth .cf-send-stamp {
+    background-color: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.2) !important;
+}
+body.ui-goth .stamp-inner { color: #d4a5e3 !important; }
+
+/* 底部功能小标签 (Tag) */
+body.ui-goth .cf-tag {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(184, 165, 245, 0.2) !important;
+    border-radius: 8px !important;
+    color: rgba(184, 165, 245, 0.7) !important;
+    box-shadow: 0 0 8px rgba(184, 165, 245, 0.1) !important;
+}
+body.ui-goth .tag-combo.active {
+    background-color: rgba(212, 165, 227, 0.15) !important;
+    border-color: rgba(212, 165, 227, 0.5) !important;
+    color: #d4a5e3 !important;
+    box-shadow: 0 0 12px rgba(212, 165, 227, 0.3) !important;
+}
+
+/* ============================================================ */
+/* 🦇 顶栏底栏特色强化：糖果霓虹灯带 + 魔法胶囊药丸 🦇 */
+/* ============================================================ */
+
+/* 1. 让顶栏和底栏的背景更加深邃暗沉，凸显发光效果 */
+body.ui-goth .msg-header,
+body.ui-goth .ch-new-header,
+body.ui-goth .cf-new-footer {
+    background-color: #0a060e !important; /* 极深的紫黑色 */
+    border: none !important; 
+    position: relative;
+    z-index: 10;
+}
+
+/* 顶栏文字增加粉紫荧光投影 */
+body.ui-goth .msg-header {
+    text-shadow: 0 0 10px rgba(212, 165, 227, 0.6);
+}
+
+/* 2. 顶栏的底部：添加一条粉彩渐变的强光霓虹灯带 */
+body.ui-goth .msg-header::after,
+body.ui-goth .ch-new-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #f5a5b8, #d4a5e3, #b8a5f5, #9ce5df);
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.8), 0 0 8px rgba(245, 165, 184, 0.6);
+    z-index: 20;
+}
+
+/* 3. 底栏的顶部：添加镜像的粉彩渐变灯带 (覆盖掉刚才隐藏的虚线) */
+body.ui-goth .cf-new-footer {
+    padding-top: 15px !important;
+}
+body.ui-goth .cf-new-footer::before {
+    content: '' !important;
+    display: block !important;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: auto !important;
+    height: 3px !important;
+    background: linear-gradient(90deg, #9ce5df, #b8a5f5, #d4a5e3, #f5a5b8) !important;
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.8), 0 0 8px rgba(245, 165, 184, 0.6) !important;
+    border: none !important;
+    z-index: 20;
+}
+
+/* 4. 底栏输入框强化：做成圆润的“魔法药丸”胶囊状 */
+body.ui-goth .cf-input-scrap {
+    background-color: #1a1225 !important;
+    border: 2px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 24px !important; /* 极大圆角，形成药丸胶囊感 */
+    padding: 10px 18px !important;
+}
+
+/* 发送按钮也配合变成小巧的圆形糖果按键 */
+body.ui-goth .cf-send-stamp {
+    border-radius: 24px !important;
+    border: 2px solid rgba(212, 165, 227, 0.5) !important;
+}
+
+/* ============================================================ */
+/* 🦇 粉彩哥特深度美化：神秘学名片 + 糖果发光气泡 + 暗黑系统框 🦇 */
+/* ============================================================ */
+
+/* 1. 深度美化名片卡：魔法祭坛风，带十字架装饰 */
+body.ui-goth .ch-profile-card {
+    background-color: #120c1a !important; /* 更深的底色 */
+    border: 2px solid rgba(184, 165, 245, 0.4) !important; /* 薰衣草紫粗边框 */
+    box-shadow: 0 0 24px rgba(184, 165, 245, 0.15), inset 0 0 20px rgba(212, 165, 227, 0.05) !important;
+    border-radius: 20px !important;
+    position: relative !important;
+    overflow: visible !important; /* 允许超出边界显示装饰 */
+}
+/* 在名片卡正上方加上一颗发光的哥特十字架 */
+body.ui-goth .ch-profile-card::before {
+    content: '†' !important; 
+    display: block !important;
+    position: absolute;
+    top: -16px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    font-size: 24px; 
+    color: #f5a5b8; /* 粉彩高亮 */
+    text-shadow: 0 0 12px #f5a5b8;
+    background-color: #120c1a; /* 用底色遮挡背后的线 */
+    padding: 0 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(184, 165, 245, 0.4);
+    z-index: 10;
+}
+
+/* 2. 时光档案按钮：改成类似哥特水晶/墓碑的样式 */
+body.ui-goth .ch-archive-btn {
+    background-color: #1a1225 !important;
+    border: 1px dashed rgba(245, 165, 184, 0.5) !important; /* 虚线魔法阵感 */
+    box-shadow: inset 0 0 12px rgba(245, 165, 184, 0.1) !important;
+    border-radius: 16px !important;
+}
+body.ui-goth .ch-archive-icon {
+    font-size: 18px !important;
+    color: #f5a5b8 !important;
+    text-shadow: 0 0 8px rgba(245, 165, 184, 0.6) !important; /* 爱心发光 */
+}
+
+/* 3. 彻底修复白底的系统提示框（通话结束、撤回等） */
+body.ui-goth .msg-system-box,
+body.ui-goth .msg-recall-content,
+body.ui-goth .chat-load-more-btn {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(245, 165, 184, 0.4) !important;
+    border-radius: 12px !important;
+    color: #d4a5e3 !important; /* 粉紫文字 */
+    box-shadow: 0 0 12px rgba(245, 165, 184, 0.2) !important;
+    font-family: monospace !important; /* 用等宽字体增加赛博感 */
+    letter-spacing: 1px !important;
+    padding: 6px 14px !important;
+}
+/* 系统框前面加上小月亮符号 */
+body.ui-goth .msg-system-box::before {
+    content: '☾ ';
+    color: #9ce5df; /* 粉青色点缀 */
+    text-shadow: 0 0 6px #9ce5df;
+}
+
+/* 4. 重塑聊天气泡：加粗糖果色边框 + 更明显的不对称圆角 */
+/* 对方气泡 (左)：薰衣草紫 */
+body.ui-goth .chat-msg.left .msg-bubble {
+    background-color: #120c1a !important;
+    border: 2px solid rgba(184, 165, 245, 0.4) !important;
+    border-top-left-radius: 4px !important;
+    border-top-right-radius: 20px !important;
+    border-bottom-right-radius: 20px !important;
+    border-bottom-left-radius: 20px !important;
+    box-shadow: 0 4px 16px rgba(184, 165, 245, 0.15) !important;
+    color: rgba(184, 165, 245, 0.9) !important;
+}
+/* 自己气泡 (右)：糖果粉红 */
+body.ui-goth .chat-msg.right .msg-bubble {
+    background-color: #1a1225 !important;
+    border: 2px solid rgba(245, 165, 184, 0.4) !important;
+    border-top-left-radius: 20px !important;
+    border-top-right-radius: 4px !important;
+    border-bottom-right-radius: 20px !important;
+    border-bottom-left-radius: 20px !important;
+    box-shadow: 0 4px 16px rgba(245, 165, 184, 0.15) !important;
+    color: #f5a5b8 !important; /* 自己发的消息变粉 */
+}
+
+/* 5. 聊天时间戳美化：发光的粉青色小字 */
+body.ui-goth .msg-time {
+    font-family: monospace !important;
+    color: rgba(156, 229, 223, 0.7) !important; /* 粉青色 */
+    text-shadow: 0 0 6px rgba(156, 229, 223, 0.3) !important;
+    letter-spacing: 1px !important;
+}
+
+/* ============================================================ */
+/* 🦇 细节打磨：名片结界框 + 幽灵电波气泡 + 隐藏条形码 + 胶囊底栏 🦇 */
+/* ============================================================ */
+
+/* 1. 隐藏名片里的条形码，优化状态签名档 */
+body.ui-goth .ch-status-barcode {
+    display: none !important;
+}
+body.ui-goth .ch-status-slot {
+    background: rgba(184, 165, 245, 0.1) !important;
+    border-left: 3px solid #d4a5e3 !important;
+    color: #d4a5e3 !important;
+    border-radius: 0 4px 4px 0 !important;
+    padding: 4px 8px !important;
+    text-shadow: 0 0 8px rgba(212, 165, 227, 0.4);
+}
+
+/* 2. 名片外框强化：增加双层“结界”感 (外层实线，内层粉色虚线) */
+body.ui-goth .ch-profile-card {
+    outline: 1px dashed rgba(245, 165, 184, 0.4) !important;
+    outline-offset: -6px !important; /* 让虚线往内部收缩，形成双层框 */
+}
+
+/* 3. 彻底改造电波气泡 (Signal Box) -> 幽灵低语风 */
+body.ui-goth .msg-signal-box {
+    background: rgba(156, 229, 223, 0.05) !important; /* 极暗的青色底 */
+    border: 1px solid rgba(156, 229, 223, 0.6) !important; /* 粉青色实线 */
+    box-shadow: 0 0 12px rgba(156, 229, 223, 0.15), inset 0 0 8px rgba(156, 229, 223, 0.1) !important;
+    border-radius: 12px !important;
+}
+body.ui-goth .msg-signal-box::before {
+    content: '✟ WHISPER' !important; /* 替换掉原本的 WAVE 波浪 */
+    color: #9ce5df !important; /* 粉青色高亮 */
+    text-shadow: 0 0 8px rgba(156, 229, 223, 0.6) !important;
+    top: -12px !important;
+    font-size: 9px !important;
+}
+
+/* 4. 底栏工具按钮升级：变成发光的粉紫小胶囊 */
+body.ui-goth .cf-tag {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    color: #d4a5e3 !important;
+    border-radius: 16px !important; /* 胶囊圆角 */
+    box-shadow: 0 2px 8px rgba(212, 165, 227, 0.1) !important;
+    transition: all 0.2s ease !important;
+}
+body.ui-goth .cf-tag:active, 
+body.ui-goth .tag-combo.active {
+    background-color: #d4a5e3 !important;
+    color: #120c1a !important;
+    box-shadow: 0 0 12px rgba(212, 165, 227, 0.8) !important;
+    transform: scale(0.95) !important;
+}
+
+/* 顺便把那个加号（+）按钮也做成发光胶囊 */
+body.ui-goth .cf-tools-scatter svg {
+    stroke: #f5a5b8 !important; /* 让SVG图标也染上糖果粉 */
+    filter: drop-shadow(0 0 4px rgba(245, 165, 184, 0.6));
+}
+
+/* ============================================================ */
+/* 🦇 卡片与入口大重铸：蝙蝠魔法书 + 发光圆角占卜卡牌 🦇 */
+/* ============================================================ */
+
+/* 1. 时光档案袋大变身：变成蝙蝠与魔法书 (Grimoire) */
+body.ui-goth .ch-archive-btn {
+    background-color: #1a1225 !important;
+    border: 2px solid rgba(212, 165, 227, 0.6) !important;
+    border-radius: 12px 12px 24px 24px !important; /* 类似小墓碑/魔法护符的形状 */
+    box-shadow: 0 0 16px rgba(184, 165, 245, 0.3), inset 0 0 10px rgba(245, 165, 184, 0.1) !important;
+    transform: rotate(0deg) !important; /* 掰正，不要歪斜 */
+    padding: 14px 8px 6px 8px !important;
+}
+/* 隐藏顶部原本的物理金属夹子 */
+body.ui-goth .ch-archive-btn::before { display: none !important; }
+
+/* 强行替换图标：用 CSS 魔法把原本的心形藏起来，换成蝙蝠 */
+body.ui-goth .ch-archive-icon { font-size: 0 !important; }
+body.ui-goth .ch-archive-icon::after {
+    content: '🦇' !important;
+    font-size: 18px !important;
+    text-shadow: 0 0 12px #f5a5b8 !important; /* 粉红发光 */
+    display: block;
+    margin-bottom: 4px;
+}
+/* 强行替换文字：从 ARCHIVE 变成 GRIMOIRE (魔法书) */
+body.ui-goth .ch-archive-text { font-size: 0 !important; }
+body.ui-goth .ch-archive-text::after {
+    content: 'GRIMOIRE' !important;
+    font-size: 8px !important;
+    color: #d4a5e3 !important;
+    letter-spacing: 2px !important;
+    font-family: monospace !important;
+    text-shadow: 0 0 4px rgba(212, 165, 227, 0.5) !important;
+}
+
+/* 2. 统统重铸！所有聊天互动卡片 (红包、塔罗、抉择、食谱、日记等) */
+body.ui-goth .msg-red-packet,
+body.ui-goth .decision-ask-box, body.ui-goth .decision-ans-box,
+body.ui-goth .tacit-ask-box, body.ui-goth .tacit-ans-box,
+body.ui-goth .msg-tarot-box, body.ui-goth .msg-recipe-box,
+body.ui-goth .msg-memo-alert, body.ui-goth .msg-diary-invite,
+body.ui-goth .msg-anni-share {
+    background-color: #120c1a !important; /* 极暗底色 */
+    background-image: none !important; /* 擦掉原本的白纸网格点点 */
+    border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 16px !important; /* 强制大圆角，抛弃直角硬边 */
+    box-shadow: 0 0 20px rgba(184, 165, 245, 0.15) !important;
+    color: #d4a5e3 !important;
+}
+
+/* 3. 卡片左上角的小标签改造：从斜胶带变成发光的霓虹铭牌 */
+body.ui-goth .msg-red-packet::before,
+body.ui-goth .decision-ask-box::before, body.ui-goth .decision-ans-box::before,
+body.ui-goth .tacit-ask-box::before, body.ui-goth .tacit-ans-box::before,
+body.ui-goth .msg-tarot-box::before, body.ui-goth .msg-recipe-box::before,
+body.ui-goth .msg-memo-alert::before, body.ui-goth .msg-diary-invite::before,
+body.ui-goth .msg-anni-share::before {
+    background: #1a1225 !important;
+    color: #f5a5b8 !important; /* 粉色字 */
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important; /* 标签也变圆润 */
+    transform: rotate(0deg) !important; /* 掰正 */
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+    top: -10px !important;
+    left: 12px !important;
+    text-shadow: 0 0 4px rgba(245, 165, 184, 0.5) !important;
+}
+
+/* 4. 卡片内部的文字和线条颜色适配暗黑模式 */
+/* 标题和虚线 */
+body.ui-goth .rp-title, body.ui-goth .decision-title, body.ui-goth .tacit-title,
+body.ui-goth .msg-anni-share-title {
+    color: #b8a5f5 !important;
+    border-color: rgba(212, 165, 227, 0.3) !important;
+}
+/* 强调内容 (金额、答案、选项) */
+body.ui-goth .rp-desc, body.ui-goth .decision-content, body.ui-goth .tacit-opt {
+    color: #f5a5b8 !important;
+    background: transparent !important;
+}
+/* 红包/票据左侧装饰条 */
+body.ui-goth .rp-left {
+    background-color: rgba(184, 165, 245, 0.1) !important;
+    border-color: rgba(212, 165, 227, 0.3) !important;
+    color: #9ce5df !important; /* 粉青色 */
+    border-radius: 14px 0 0 14px !important;
+}
+/* 各种结果图章 (如通过/失败) */
+body.ui-goth .rp-stamp, body.ui-goth .tacit-stamp {
+    color: rgba(245, 165, 184, 0.3) !important;
+    border-color: rgba(245, 165, 184, 0.3) !important;
+}
+
+/* ============================================================ */
+/* 🦇 深度重铸：修复残影 + 菜单/档案/设置界面魔法化 🦇 */
+/* ============================================================ */
+
+/* 0. 修复红包卡片上的虚线残影 */
+body.ui-goth .rp-tape {
+    display: none !important; /* 彻底干掉原版的斜虚线标签 */
+}
+
+/* ------------------------------------------------------------ */
+/* 1. 长按菜单 & 多选模式：从直角菜单变成发光悬浮魔盒 */
+/* ------------------------------------------------------------ */
+body.ui-goth #chat-long-press-menu {
+    background-color: #120c1a !important; /* 极暗底色 */
+    border: 1px solid rgba(212, 165, 227, 0.6) !important;
+    border-radius: 16px !important; /* 大圆角 */
+    box-shadow: 0 0 24px rgba(212, 165, 227, 0.25) !important; /* 粉紫光晕 */
+}
+/* 菜单左上角的小标签变正 */
+body.ui-goth #chat-long-press-menu::before {
+    background: #1a1225 !important; color: #f5a5b8 !important;
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important; transform: none !important;
+    top: -12px !important; left: 16px !important;
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+}
+/* 里面的小按钮变成暗色胶囊 */
+body.ui-goth .chat-menu-item {
+    background: #1a1225 !important; 
+    border: 1px solid rgba(184, 165, 245, 0.4) !important;
+    border-radius: 12px !important; 
+    color: #d4a5e3 !important;
+}
+body.ui-goth .chat-menu-item:active {
+    background: #d4a5e3 !important; color: #1a1225 !important;
+    box-shadow: 0 0 12px #d4a5e3 !important;
+}
+/* 危险按钮（如撤回/删除）用粉红高亮 */
+body.ui-goth .chat-menu-item.danger { 
+    color: #f5a5b8 !important; 
+    border-color: rgba(245, 165, 184, 0.5) !important; 
+}
+
+/* 多选模式顶部/底部控制栏 */
+body.ui-goth #chat-multi-top-bar {
+    background: #0a060e !important; color: #d4a5e3 !important;
+    border-bottom: 2px solid rgba(212, 165, 227, 0.5) !important;
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.3) !important;
+}
+body.ui-goth #chat-multi-action-bar { 
+    background: #0a060e !important; box-shadow: 0 0 20px #0a060e !important;
+}
+body.ui-goth #chat-multi-action-bar::before { display: none !important; } /* 干掉顶部分割线 */
+/* 多选圆形复选框 */
+body.ui-goth .msg-multi-check {
+    border-radius: 50% !important; 
+    border: 2px solid rgba(212, 165, 227, 0.5) !important;
+    background: #1a1225 !important;
+}
+body.ui-goth .msg-multi-check.checked {
+    background: #d4a5e3 !important; 
+    box-shadow: 0 0 10px #d4a5e3 !important;
+}
+body.ui-goth .msg-multi-check.checked::after { border-color: #1a1225 !important; }
+
+/* ------------------------------------------------------------ */
+/* 2. 时光档案 & 设置界面：深空紫底 + 荧光网格 */
+/* ------------------------------------------------------------ */
+/* 整个APP底色大替换 */
+body.ui-goth #archive-app,
+body.ui-goth #chat-settings-app {
+    background-color: #0a060e !important;
+    background-image: radial-gradient(rgba(212, 165, 227, 0.08) 1px, transparent 1px) !important;
+}
+/* 顶部导航栏发光 */
+body.ui-goth .st-header {
+    background: #0a060e !important; 
+    border-bottom: 2px solid rgba(212, 165, 227, 0.4) !important;
+    color: #d4a5e3 !important; 
+    text-shadow: 0 0 8px rgba(212, 165, 227, 0.5) !important;
+}
+/* 返回按钮圆润化 */
+body.ui-goth .st-back {
+    background: #1a1225 !important; border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 8px !important; color: #d4a5e3 !important;
+    padding: 4px 10px !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. 档案卡片与内容美化 */
+/* ------------------------------------------------------------ */
+/* 收藏列表卡片 */
+body.ui-goth .fav-item {
+    background: #120c1a !important; border: 1px solid rgba(184, 165, 245, 0.4) !important;
+    border-radius: 16px !important; box-shadow: 0 0 16px rgba(184, 165, 245, 0.1) !important;
+}
+body.ui-goth .fav-single-text { color: #d4a5e3 !important; }
+/* 纪念日列表 */
+body.ui-goth .anni-item { border-bottom-color: rgba(212, 165, 227, 0.2) !important; }
+body.ui-goth .anni-name { color: #d4a5e3 !important; }
+body.ui-goth .anni-days { color: #f5a5b8 !important; text-shadow: 0 0 8px rgba(245, 165, 184, 0.4) !important; }
+
+/* ------------------------------------------------------------ */
+/* 4. 设置模块内的控制台重铸 (药丸开关、发光滑块、胶囊框) */
+/* ------------------------------------------------------------ */
+/* 设置块容器 */
+body.ui-goth .st-box {
+    background: #120c1a !important; border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    border-radius: 16px !important;
+}
+body.ui-goth .st-box::after { display: none !important; } /* 干掉碍眼的内部虚线边框 */
+body.ui-goth .st-title, body.ui-goth .st-row { 
+    color: #d4a5e3 !important; border-color: rgba(212, 165, 227, 0.2) !important; 
+}
+
+/* 输入框 */
+body.ui-goth .cs-textarea, body.ui-goth input[type="text"] {
+    background: #1a1225 !important; border: 1px solid rgba(184, 165, 245, 0.4) !important;
+    border-radius: 12px !important; color: #f5a5b8 !important;
+}
+body.ui-goth .cs-textarea:focus, body.ui-goth input[type="text"]:focus {
+    border-color: #f5a5b8 !important; box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+}
+
+/* 各种胶囊按钮 (保存、取消等) */
+body.ui-goth .st-btn, body.ui-goth .btn-cancel, body.ui-goth .btn-save, body.ui-goth .btn-reset {
+    background: #1a1225 !important; border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 12px !important; color: #d4a5e3 !important;
+}
+body.ui-goth .st-btn:active, body.ui-goth .btn-save {
+    background: #d4a5e3 !important; color: #1a1225 !important; box-shadow: 0 0 12px #d4a5e3 !important;
+}
+
+/* 开关 Toggle (原版是方形，现在变药丸) */
+body.ui-goth .st-switch {
+    background: #1a1225 !important; border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 12px !important;
+}
+body.ui-goth .st-switch::after { 
+    background: #555 !important; border-radius: 50% !important; 
+}
+body.ui-goth .st-switch:checked {
+    background: #d4a5e3 !important; border-color: #d4a5e3 !important;
+    box-shadow: 0 0 10px rgba(212, 165, 227, 0.6) !important;
+}
+body.ui-goth .st-switch:checked::after { background: #1a1225 !important; }
+
+/* 滑动条 Slider */
+body.ui-goth .st-range::-webkit-slider-runnable-track {
+    background: #1a1225 !important; border: 1px solid rgba(212, 165, 227, 0.3) !important;
+    border-radius: 4px !important;
+}
+body.ui-goth .st-range::-webkit-slider-thumb {
+    background: #d4a5e3 !important; border-radius: 50% !important; border: none !important;
+    box-shadow: 0 0 10px #d4a5e3 !important;
+}
+
+/* ============================================================ */
+/* 🦇 终极除白计划：所有系统弹窗与残留白框彻底暗黑化 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 彻底改造所有全局弹窗 (脑电波、贴纸库、资金流转等) */
+/* ------------------------------------------------------------ */
+body.ui-goth .modal-content,
+body.ui-goth .rp-modal-content {
+    background-color: #120c1a !important; /* 深空紫底 */
+    background-image: none !important; /* 擦除生硬的点阵网格 */
+    border: 2px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 16px !important; /* 强制大圆角 */
+    box-shadow: 0 0 24px rgba(184, 165, 245, 0.25) !important; /* 粉紫光晕 */
+    color: #d4a5e3 !important;
+}
+
+/* 弹窗内部的输入框 (金额输入、自定义信号等) */
+body.ui-goth .modal-content input[type="text"],
+body.ui-goth .rp-modal-content input[type="text"] {
+    background-color: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 12px !important; /* 胶囊输入框 */
+    color: #f5a5b8 !important; /* 糖果粉文字 */
+    padding: 10px 14px !important;
+}
+body.ui-goth .modal-content input[type="text"]:focus,
+body.ui-goth .rp-modal-content input[type="text"]:focus {
+    border-color: #f5a5b8 !important;
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 资金流转中心 (红包/转账) 专属残留白框修复 */
+/* ------------------------------------------------------------ */
+/* 顶部斜贴的 FUNDS 胶带标签 */
+body.ui-goth .tape-rp {
+    background: #1a1225 !important;
+    color: #f5a5b8 !important;
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important;
+    transform: rotate(0deg) !important; /* 掰正 */
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+}
+/* TA的专属金库余额 虚线白框 */
+body.ui-goth .rp-balance-box {
+    background-color: #1a1225 !important;
+    border: 1px dashed rgba(245, 165, 184, 0.5) !important;
+    border-radius: 12px !important;
+    box-shadow: inset 0 0 10px rgba(245, 165, 184, 0.1) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. 时光档案残留的“添加专属纪念日”白框修复 (图1) */
+/* ------------------------------------------------------------ */
+body.ui-goth #archive-anni-container + div {
+    background-color: #1a1225 !important;
+    border: 1px dashed rgba(245, 165, 184, 0.5) !important;
+    border-radius: 12px !important;
+    color: #f5a5b8 !important; /* 按钮文字变粉 */
+    box-shadow: 0 0 12px rgba(245, 165, 184, 0.1) !important;
+    transition: 0.2s ease !important;
+}
+body.ui-goth #archive-anni-container + div:active {
+    background-color: #d4a5e3 !important;
+    color: #1a1225 !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. 聊天设置里残留的“启用的字卡分组”白框修复 (图2) */
+/* ------------------------------------------------------------ */
+/* 强制覆盖设置界面里那些没起名字的虚线白底框 */
+body.ui-goth #chat-settings-app .st-box > div[style*="background"], 
+body.ui-goth #chat-settings-app .st-box > div[style*="dashed"] {
+    background-color: #1a1225 !important;
+    border: 1px dashed rgba(212, 165, 227, 0.5) !important;
+    border-radius: 12px !important;
+}
+/* 复选框及其旁边文字颜色的适配 */
+body.ui-goth .fc-checkbox-label {
+    color: #d4a5e3 !important;
+}
+
+/* ============================================================ */
+/* 🦇 黑暗通灵通讯：电话悬浮大窗口 & 迷你胶囊窗彻底粉彩哥特化 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 电话大窗口 (通灵阵本体) */
+/* ------------------------------------------------------------ */
+body.ui-goth #call-floating-window {
+    background-color: #120c1a !important; /* 极暗紫底 */
+    border: 2px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 24px !important; /* 彻底圆润 */
+    box-shadow: 0 0 30px rgba(184, 165, 245, 0.3), inset 0 0 16px rgba(212, 165, 227, 0.1) !important;
+}
+
+/* 顶部 CALLING 标签改造 */
+body.ui-goth #call-floating-window::before {
+    background: #1a1225 !important;
+    color: #f5a5b8 !important; /* 糖果粉 */
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important;
+    transform: rotate(0deg) !important; /* 掰正 */
+    top: -12px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important; /* 居中显示 */
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+}
+
+/* 右上角缩小按钮 */
+body.ui-goth .call-shrink-btn {
+    background: #1a1225 !important;
+    color: #9ce5df !important; /* 粉青色 */
+    border: 1px solid rgba(156, 229, 223, 0.6) !important;
+    border-radius: 50% !important; /* 变成小圆球 */
+    transform: rotate(0deg) !important;
+    top: -10px !important; right: -10px !important;
+    box-shadow: 0 0 10px rgba(156, 229, 223, 0.2) !important;
+}
+
+/* 头像外圈改为发光魔法阵 */
+body.ui-goth .call-avatar {
+    border: 2px dashed rgba(245, 165, 184, 0.6) !important;
+    box-shadow: 0 0 20px rgba(245, 165, 184, 0.4) !important;
+}
+/* 名字与状态颜色 */
+body.ui-goth .call-name { color: #d4a5e3 !important; text-shadow: 0 0 8px rgba(212, 165, 227, 0.4) !important; }
+body.ui-goth .call-status { color: #9ce5df !important; letter-spacing: 2px !important; }
+
+/* 接听与挂断按钮 */
+body.ui-goth .call-btn {
+    background: #1a1225 !important;
+    border-width: 2px !important;
+}
+/* 接听 (Accept) - 发光粉青色 */
+body.ui-goth .call-btn.accept {
+    color: #9ce5df !important;
+    border-color: rgba(156, 229, 223, 0.6) !important;
+    box-shadow: 0 0 16px rgba(156, 229, 223, 0.2) !important;
+}
+/* 挂断 (Reject) - 发光糖果粉 */
+body.ui-goth .call-btn.reject {
+    color: #f5a5b8 !important;
+    border-color: rgba(245, 165, 184, 0.6) !important;
+    box-shadow: 0 0 16px rgba(245, 165, 184, 0.2) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 迷你胶囊窗 (缩小后的状态) */
+/* ------------------------------------------------------------ */
+body.ui-goth #call-mini-window {
+    background: #120c1a !important;
+    border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 24px !important; /* 极大圆角胶囊 */
+    transform: rotate(0deg) !important; /* 掰正 */
+    box-shadow: 0 0 20px rgba(184, 165, 245, 0.25) !important;
+    padding: 6px 12px !important;
+}
+
+/* 迷你窗上的装饰标签 */
+body.ui-goth .mini-tape {
+    display: none !important; /* 原本的胶带太丑了，直接干掉 */
+}
+
+/* 迷你窗头像 */
+body.ui-goth .mini-avatar-wrap {
+    background: transparent !important;
+    border: none !important;
+    transform: rotate(0deg) !important;
+    padding: 0 !important;
+}
+body.ui-goth .mini-avatar {
+    border-radius: 50% !important;
+    border: 1px solid rgba(212, 165, 227, 0.6) !important;
+    box-shadow: 0 0 8px rgba(212, 165, 227, 0.4) !important;
+}
+
+/* 迷你窗文字 */
+body.ui-goth .mini-title { color: #d4a5e3 !important; }
+body.ui-goth .mini-time { color: #9ce5df !important; text-shadow: 0 0 6px rgba(156, 229, 223, 0.3) !important; }
+
+/* 迷你窗挂断按钮 */
+body.ui-goth .mini-end-btn {
+    background: #1a1225 !important;
+    color: #f5a5b8 !important;
+    border: 1px solid rgba(245, 165, 184, 0.6) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 8px rgba(245, 165, 184, 0.2) !important;
+}
+
+/* ============================================================ */
+/* 🦇 全屏应用大重铸：记账、月经、全局设置彻底粉彩哥特化 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 统一替换全屏大应用的背景大底 */
+/* ------------------------------------------------------------ */
+body.ui-goth #bill-app,
+body.ui-goth #period-app,
+body.ui-goth #settings-app {
+    background-color: #0a060e !important; /* 极暗深空紫 */
+    background-image: radial-gradient(rgba(212, 165, 227, 0.08) 1px, transparent 1px) !important;
+}
+
+/* 统一顶栏 (Header/Bar) */
+body.ui-goth .bill-date-bar,
+body.ui-goth .period-month-bar,
+body.ui-goth #settings-app .st-header {
+    background: #0a060e !important;
+    border-bottom: 2px solid rgba(212, 165, 227, 0.4) !important;
+    color: #d4a5e3 !important;
+    text-shadow: 0 0 8px rgba(212, 165, 227, 0.4) !important;
+}
+
+/* 统一返回/日期按钮 */
+body.ui-goth .bill-date-btn, 
+body.ui-goth .st-back {
+    background: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 12px !important;
+    color: #d4a5e3 !important;
+    box-shadow: 0 0 10px rgba(212, 165, 227, 0.1) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 记账 (Bill) 专属魔法化 */
+/* ------------------------------------------------------------ */
+/* 顶部统计卡片 */
+body.ui-goth .bill-stats-box {
+    background: #120c1a !important;
+    border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 20px rgba(212, 165, 227, 0.15) !important;
+}
+/* 记账金额颜色替换：支出用糖果粉，收入用粉青色 */
+body.ui-goth .bill-stat-val.out, body.ui-goth .bill-item-amt.out { color: #f5a5b8 !important; text-shadow: 0 0 8px rgba(245, 165, 184, 0.3) !important; }
+body.ui-goth .bill-stat-val.in, body.ui-goth .bill-item-amt.in { color: #9ce5df !important; text-shadow: 0 0 8px rgba(156, 229, 223, 0.3) !important; }
+
+/* 记账流水列表单项 */
+body.ui-goth .bill-item-card {
+    background: #1a1225 !important;
+    border: 1px solid rgba(184, 165, 245, 0.3) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 12px rgba(184, 165, 245, 0.1) !important;
+}
+/* 收入支出小标签 */
+body.ui-goth .bill-item-type { border-radius: 8px !important; border: 1px solid transparent !important; }
+body.ui-goth .bill-item-type.out { background: rgba(245, 165, 184, 0.1) !important; color: #f5a5b8 !important; border-color: rgba(245, 165, 184, 0.5) !important; }
+body.ui-goth .bill-item-type.in { background: rgba(156, 229, 223, 0.1) !important; color: #9ce5df !important; border-color: rgba(156, 229, 223, 0.5) !important; }
+body.ui-goth .bill-type-active { background: #d4a5e3 !important; color: #1a1225 !important; box-shadow: 0 0 10px #d4a5e3 !important; }
+
+/* ------------------------------------------------------------ */
+/* 3. 月相/月经 (Period) 专属魔法化 */
+/* ------------------------------------------------------------ */
+/* 日历与底盘面板 */
+body.ui-goth .period-calendar, 
+body.ui-goth .period-dashboard {
+    background: #120c1a !important;
+    background-image: none !important; /* 去掉点阵条纹 */
+    border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 24px rgba(212, 165, 227, 0.15) !important;
+}
+/* 掰正斜胶带，变成发光铭牌 */
+body.ui-goth .period-calendar::before,
+body.ui-goth .period-tape {
+    background: #1a1225 !important; color: #f5a5b8 !important;
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important; transform: rotate(0deg) translateX(-50%) !important;
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+    top: -12px !important; left: 50% !important; text-shadow: 0 0 4px rgba(245, 165, 184, 0.5);
+}
+
+/* 日历里的具体天数 */
+body.ui-goth .p-day { color: #d4a5e3 !important; }
+/* 今天 (Today) */
+body.ui-goth .p-day.today {
+    background: rgba(184, 165, 245, 0.1) !important;
+    border: 1px solid #d4a5e3 !important;
+    border-radius: 8px !important;
+    box-shadow: inset 0 0 8px rgba(212, 165, 227, 0.3) !important;
+}
+/* 姨妈期 (Period) - 改成深紫红底+糖果粉字 */
+body.ui-goth .p-day.period {
+    background: rgba(245, 165, 184, 0.15) !important;
+    color: #f5a5b8 !important;
+    border: 1px solid rgba(245, 165, 184, 0.6) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.2) !important;
+}
+/* 预测期 (Predict) */
+body.ui-goth .p-day.predict {
+    background: transparent !important;
+    color: rgba(245, 165, 184, 0.7) !important;
+    border: 1px dashed rgba(245, 165, 184, 0.4) !important;
+    border-radius: 8px !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. 全局设置 (Settings) 残留数值与颜色修正 */
+/* ------------------------------------------------------------ */
+/* 统一同步设置内右侧数值强调色 */
+body.ui-goth .st-val {
+    color: #f5a5b8 !important;
+    text-shadow: 0 0 6px rgba(245, 165, 184, 0.3) !important;
+}
+/* 修复设置大厅底部的重置/取消按钮布局和颜色 */
+body.ui-goth #settings-app .st-box {
+    background: #120c1a !important; 
+    border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    border-radius: 16px !important;
+}
+body.ui-goth #settings-app .st-box::after { display: none !important; }
+
+/* ============================================================ */
+/* 🦇 秘术重铸：食谱、字卡、日记应用粉彩哥特化 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 统一替换这三个大应用的底层背景 */
+/* ------------------------------------------------------------ */
+body.ui-goth #recipe-app,
+body.ui-goth #flashcard-app,
+body.ui-goth #diary-app {
+    background-color: #0a060e !important;
+    background-image: radial-gradient(rgba(212, 165, 227, 0.08) 1px, transparent 1px) !important;
+}
+
+/* 统一顶栏 (Header/Bar) */
+body.ui-goth .recipe-date-bar,
+body.ui-goth .fc-header,
+body.ui-goth .fc-tabs {
+    background: #0a060e !important;
+    border-bottom: 2px solid rgba(212, 165, 227, 0.4) !important;
+    color: #d4a5e3 !important;
+    text-shadow: 0 0 8px rgba(212, 165, 227, 0.4) !important;
+}
+
+/* 统一顶部功能按钮 */
+body.ui-goth .recipe-date-btn,
+body.ui-goth .fc-back {
+    background: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 12px !important; /* 胶囊圆角 */
+    color: #d4a5e3 !important;
+    box-shadow: 0 0 10px rgba(212, 165, 227, 0.1) !important;
+}
+body.ui-goth .recipe-date-btn:active {
+    background: #d4a5e3 !important; color: #1a1225 !important;
+    box-shadow: 0 0 12px #d4a5e3 !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 食谱 (Recipe) - 魔药配方本 */
+/* ------------------------------------------------------------ */
+body.ui-goth .recipe-meal-card {
+    background: #120c1a !important;
+    border: 1px solid rgba(245, 165, 184, 0.4) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 20px rgba(245, 165, 184, 0.15) !important;
+}
+/* 掰正斜贴的 MEAL 标签，变成发光铭牌 */
+body.ui-goth .recipe-meal-card::before {
+    background: #1a1225 !important; color: #f5a5b8 !important;
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important; transform: rotate(0deg) !important;
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+    top: -10px !important; left: 16px !important;
+}
+/* 菜品与时间字体美化 */
+body.ui-goth .recipe-meal-time { border-bottom-color: rgba(245, 165, 184, 0.2) !important; color: #9ce5df !important; }
+body.ui-goth .recipe-meal-food { color: #f5a5b8 !important; text-shadow: 0 0 6px rgba(245, 165, 184, 0.3) !important; }
+body.ui-goth .recipe-comment-box {
+    background: #1a1225 !important; border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    border-radius: 12px !important; color: #d4a5e3 !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. 字卡 (Flashcard) - 赛博通灵符文 */
+/* ------------------------------------------------------------ */
+/* 顶部切换 Tab */
+body.ui-goth .fc-tab { border-color: rgba(212, 165, 227, 0.2) !important; color: #888 !important; }
+body.ui-goth .fc-tab.active { background: #1a1225 !important; color: #d4a5e3 !important; box-shadow: inset 0 -3px 0 #d4a5e3 !important; }
+/* 外层大框 */
+body.ui-goth .fc-box {
+    background: #120c1a !important; border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    border-radius: 16px !important;
+}
+body.ui-goth .fc-box::after { display: none !important; } /* 干掉虚线内边框 */
+/* 搜索框与大文本框 */
+body.ui-goth .fc-search-input, body.ui-goth .fc-textarea {
+    background: #1a1225 !important; border: 1px solid rgba(184, 165, 245, 0.4) !important;
+    border-radius: 12px !important; color: #d4a5e3 !important;
+}
+body.ui-goth .fc-search-input:focus, body.ui-goth .fc-textarea:focus { border-color: #f5a5b8 !important; box-shadow: 0 0 10px rgba(245, 165, 184, 0.2) !important; }
+/* 按钮组 */
+body.ui-goth .fc-btn, body.ui-goth .fc-btn-outline {
+    border-radius: 12px !important; background: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.6) !important; color: #d4a5e3 !important;
+}
+/* 列表项 (符文牌) */
+body.ui-goth .fc-item {
+    background: #1a1225 !important; border: 1px solid rgba(184, 165, 245, 0.3) !important;
+    border-radius: 12px !important; margin-bottom: 8px !important;
+}
+body.ui-goth .fc-item-text { color: #f5a5b8 !important; }
+body.ui-goth .fc-item-input { background: #120c1a !important; border-color: rgba(212, 165, 227, 0.4) !important; color: #f5a5b8 !important; border-radius: 6px !important;}
+/* 将方形复选框变成圆形魔法发光点 */
+body.ui-goth .fc-checkbox-label input[type="checkbox"], body.ui-goth .fc-item input[type="checkbox"] {
+    border-radius: 50% !important; border: 2px solid rgba(212, 165, 227, 0.5) !important; background: #1a1225 !important;
+}
+body.ui-goth .fc-checkbox-label input[type="checkbox"]:checked, body.ui-goth .fc-item input[type="checkbox"]:checked {
+    background: #d4a5e3 !important; box-shadow: 0 0 10px #d4a5e3 !important;
+}
+body.ui-goth .fc-checkbox-label input[type="checkbox"]:checked::after, body.ui-goth .fc-item input[type="checkbox"]:checked::after {
+    border-color: #120c1a !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. 日记 (Diary) - 魔法封印卷轴 */
+/* ------------------------------------------------------------ */
+/* 日记本封面卡片 */
+body.ui-goth .diary-book-card {
+    background: #120c1a !important; border: 1px solid rgba(156, 229, 223, 0.4) !important; /* 青色魔光 */
+    border-radius: 16px !important; box-shadow: 0 0 20px rgba(156, 229, 223, 0.1) !important;
+    background-image: none !important;
+}
+body.ui-goth .diary-book-card::before {
+    background: #1a1225 !important; color: #9ce5df !important;
+    border: 1px solid rgba(156, 229, 223, 0.8) !important;
+    border-radius: 8px !important; transform: rotate(0deg) !important;
+    box-shadow: 0 0 10px rgba(156, 229, 223, 0.3) !important;
+    top: -10px !important; left: 16px !important; text-shadow: 0 0 6px rgba(156, 229, 223, 0.5) !important;
+}
+/* 日记内容条目 */
+body.ui-goth .diary-entry-box {
+    background: #1a1225 !important; border: 1px solid rgba(212, 165, 227, 0.3) !important;
+    border-radius: 16px !important; box-shadow: 0 0 16px rgba(212, 165, 227, 0.1) !important;
+}
+body.ui-goth .diary-entry-header { border-bottom-color: rgba(212, 165, 227, 0.2) !important; color: #d4a5e3 !important; }
+body.ui-goth .diary-entry-content { color: #f5a5b8 !important; }
+
+/* 完结提示框与催更框修复 */
+body.ui-goth .diary-finished-box {
+    background: rgba(245, 165, 184, 0.1) !important; border: 1px dashed rgba(245, 165, 184, 0.5) !important;
+    border-radius: 16px !important; color: #f5a5b8 !important; text-shadow: 0 0 8px rgba(245, 165, 184, 0.4) !important;
+}
+body.ui-goth .diary-action-box { border-radius: 16px !important; background: #1a1225 !important; }
+body.ui-goth .diary-action-box.turn-me { border: 1px solid rgba(156, 229, 223, 0.5) !important; color: #9ce5df !important; box-shadow: 0 0 12px rgba(156, 229, 223, 0.2) !important;}
+
+/* ============================================================ */
+/* 🦇 强效补光与除白：修复隐形黑字 & 日记内页顽固白底 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 修复记账 (Bill) 看不清的字 (图1) */
+/* ------------------------------------------------------------ */
+/* 记账单项的备注文字（如“日常消费”） */
+body.ui-goth .bill-item-note {
+    color: #b8a5f5 !important; /* 亮薰衣草紫，保证在黑底上看得很清楚 */
+    text-shadow: 0 0 4px rgba(184, 165, 245, 0.3) !important;
+}
+/* 删除按钮文字 */
+body.ui-goth .bill-item-del {
+    color: #f5a5b8 !important; /* 糖果粉高亮 */
+    opacity: 0.8;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 修复月经/月相 (Period) 看不清的字 (图2) */
+/* ------------------------------------------------------------ */
+/* 日历顶部的星期几 (SUN, MON...) */
+body.ui-goth .period-weekdays {
+    color: #d4a5e3 !important; 
+    border-bottom-color: rgba(212, 165, 227, 0.3) !important;
+}
+/* 日历里的普通天数 (1, 2, 3...) */
+body.ui-goth .p-day {
+    color: #d4a5e3 !important; /* 粉紫色 */
+}
+/* 非本月的天数稍微暗一点 */
+body.ui-goth .p-day.other-month {
+    color: rgba(212, 165, 227, 0.3) !important;
+}
+/* 底部预测面板的文字 (预测：距离下次还有...) */
+body.ui-goth .period-dashboard,
+body.ui-goth .period-dashboard div,
+body.ui-goth .period-dashboard span {
+    color: #d4a5e3 !important;
+    text-shadow: 0 0 4px rgba(212, 165, 227, 0.2) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. 修复日记列表 (Diary List) 看不清的标题 (图3) */
+/* ------------------------------------------------------------ */
+/* 日记本封面卡片里的所有文字（标题、描述等） */
+body.ui-goth .diary-book-card,
+body.ui-goth .diary-book-card div,
+body.ui-goth .diary-book-card span,
+body.ui-goth .diary-book-card h3 {
+    color: #d4a5e3 !important; /* 全部提亮为粉紫色 */
+}
+
+/* ------------------------------------------------------------ */
+/* 4. 彻底轰碎日记内页 (Diary Read) 的顽固白底信纸 (图4) */
+/* ------------------------------------------------------------ */
+/* 强制消除日记内页可能存在的白色背景容器和横线 */
+body.ui-goth #diary-app > div,
+body.ui-goth #diary-app section,
+body.ui-goth .diary-body {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+/* 拦截所有内联样式自带的白底 */
+body.ui-goth #diary-app [style*="background: white"],
+body.ui-goth #diary-app [style*="background:#fff"],
+body.ui-goth #diary-app [style*="background: #ffffff"] {
+    background-color: transparent !important;
+    background-image: none !important;
+}
+
+/* 日记内文卡片顶部的 作者和时间 (AUTHOR / 日期) */
+body.ui-goth .diary-entry-header,
+body.ui-goth .diary-entry-header span {
+    color: #b8a5f5 !important; /* 薰衣草紫提亮 */
+}
+
+/* 底部“本册交换日记已圆满写完”的封印提示框 */
+body.ui-goth .diary-finished-box {
+    background-color: #1a1225 !important; /* 暗黑胶囊底色 */
+    border: 1px dashed #f5a5b8 !important; /* 糖果粉虚线 */
+    color: #f5a5b8 !important;
+    box-shadow: 0 0 16px rgba(245, 165, 184, 0.1) !important;
+    border-radius: 16px !important;
+}
+body.ui-goth .diary-finished-box span,
+body.ui-goth .diary-finished-box div {
+    color: #f5a5b8 !important;
+}
+
+/* ============================================================ */
+/* 🦇 彻底轰碎！日记内页 (#diary-detail-app) 终极暗黑净化 🦇 */
+/* ============================================================ */
+
+/* 1. 把整个日记内页大容器变成深空紫底 */
+body.ui-goth #diary-detail-app {
+    background-color: #0a060e !important;
+    background-image: radial-gradient(rgba(212, 165, 227, 0.08) 1px, transparent 1px) !important;
+}
+
+/* 2. 强行抹除内页里所有自带横线、白底的信纸纸张（拦截内联样式） */
+body.ui-goth #diary-detail-app div[style*="repeating-linear-gradient"],
+body.ui-goth #diary-detail-app div[style*="linear-gradient"],
+body.ui-goth #diary-detail-app div[style*="background: white"],
+body.ui-goth #diary-detail-app div[style*="background:#fff"],
+body.ui-goth #diary-detail-app div[style*="background: #ffffff"] {
+    background-color: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* 3. 修复内页顶部的导航栏（标题、返回按钮、新建按钮） */
+body.ui-goth #diary-detail-app > div:first-child {
+    background-color: #0a060e !important;
+    border-bottom: 2px solid rgba(212, 165, 227, 0.4) !important;
+    background-image: none !important; /* 防止头部落网 */
+}
+/* 标题文字变粉紫发光 */
+body.ui-goth #diary-detail-title {
+    color: #d4a5e3 !important;
+    text-shadow: 0 0 8px rgba(212, 165, 227, 0.4) !important;
+}
+/* 返回按钮和右上角的 +新建/+书写 按钮变魔法胶囊 */
+body.ui-goth #diary-detail-app .st-back,
+body.ui-goth #diary-write-btn {
+    background: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 12px !important;
+    color: #d4a5e3 !important;
+    box-shadow: 0 0 10px rgba(212, 165, 227, 0.1) !important;
+}
+body.ui-goth #diary-detail-app .st-back:active,
+body.ui-goth #diary-write-btn:active {
+    background: #d4a5e3 !important;
+    color: #1a1225 !important;
+}
+
+/* 4. 二次强化日记内容卡片的颜色，确保字绝对不隐形 */
+body.ui-goth .diary-entry-box {
+    background-color: #1a1225 !important; 
+    border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    border-radius: 16px !important; 
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.15) !important;
+}
+/* 头部日期和作者：薰衣草紫 */
+body.ui-goth .diary-entry-header,
+body.ui-goth .diary-entry-header span {
+    border-bottom-color: rgba(212, 165, 227, 0.3) !important; 
+    color: #b8a5f5 !important; 
+    font-weight: 900 !important;
+}
+/* 正文内容：糖果粉 */
+body.ui-goth .diary-entry-content { 
+    color: #f5a5b8 !important; 
+    font-weight: bold !important;
+}
+
+/* 5. 顺手修复如果是空日记时的那句提示语 */
+body.ui-goth #diary-detail-app .empty-hint-text {
+    color: rgba(212, 165, 227, 0.6) !important;
+    text-shadow: none !important;
+}
+
+/* ============================================================ */
+/* 🦇 秘术重铸第二弹：美化、塔罗、信箱彻底粉彩哥特化 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 统一替换背景大底与顶部切换 Tab */
+/* ------------------------------------------------------------ */
+body.ui-goth #beauty-app,
+body.ui-goth #tarot-app,
+body.ui-goth #mail-app {
+    background-color: #0a060e !important; /* 极深紫底 */
+    background-image: radial-gradient(rgba(212, 165, 227, 0.08) 1px, transparent 1px) !important;
+}
+
+/* 顶部 Tabs 栏 */
+body.ui-goth .beauty-tabs, body.ui-goth .tarot-tabs, body.ui-goth .mail-tabs {
+    background: #0a060e !important;
+    border-bottom: 2px solid rgba(212, 165, 227, 0.4) !important;
+}
+/* Tab 未选中状态 */
+body.ui-goth .beauty-tab, body.ui-goth .tarot-tab, body.ui-goth .mail-tab {
+    border-color: rgba(212, 165, 227, 0.2) !important; 
+    color: rgba(212, 165, 227, 0.5) !important;
+}
+/* Tab 选中状态 */
+body.ui-goth .beauty-tab.active, body.ui-goth .tarot-tab.active, body.ui-goth .mail-tab.active {
+    background: #1a1225 !important; 
+    color: #d4a5e3 !important; 
+    box-shadow: inset 0 -3px 0 #d4a5e3 !important;
+    text-shadow: 0 0 8px rgba(212, 165, 227, 0.4) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 美化主题商店 (Beauty App) - 暗网魔法商店 */
+/* ------------------------------------------------------------ */
+/* 顶部圆球主题切换 */
+body.ui-goth .theme-ball {
+    background: #120c1a !important; 
+    border: 2px solid rgba(184, 165, 245, 0.4) !important;
+    color: #b8a5f5 !important; 
+    box-shadow: 0 0 10px rgba(184, 165, 245, 0.1) !important;
+}
+body.ui-goth .theme-item.active .theme-ball {
+    border-color: #f5a5b8 !important; 
+    box-shadow: 0 0 16px rgba(245, 165, 184, 0.6) !important;
+    color: #f5a5b8 !important;
+}
+body.ui-goth .theme-name { color: #d4a5e3 !important; }
+
+/* 气泡皮肤预览卡片 */
+body.ui-goth .beauty-bubble-card {
+    background: #120c1a !important;
+    border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 20px rgba(212, 165, 227, 0.15) !important;
+}
+/* 掰正左上角 BUBBLE 铭牌 */
+body.ui-goth .beauty-bubble-card::before {
+    background: #1a1225 !important; color: #f5a5b8 !important;
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important; transform: rotate(0deg) !important;
+    top: -10px !important; left: 16px !important;
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+}
+body.ui-goth .bb-title { color: #d4a5e3 !important; border-bottom-color: rgba(212, 165, 227, 0.2) !important; }
+
+/* 轰碎原本生硬的预览框网格 */
+body.ui-goth .bb-preview-box {
+    background-color: #0a060e !important;
+    background-image: radial-gradient(rgba(156, 229, 223, 0.1) 1px, transparent 1px) !important;
+    border: 1px dashed rgba(156, 229, 223, 0.3) !important; /* 粉青色虚线边 */
+    border-radius: 12px !important;
+}
+/* 底部应用按钮变为胶囊 */
+body.ui-goth .bb-btn {
+    border-radius: 12px !important; background: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.6) !important; color: #d4a5e3 !important;
+}
+body.ui-goth .bb-btn.applied {
+    background: #d4a5e3 !important; color: #120c1a !important; box-shadow: 0 0 16px rgba(212, 165, 227, 0.4) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. 玄学/塔罗占卜 (Tarot App) - 魔女占卜密室 */
+/* ------------------------------------------------------------ */
+/* 抽牌桌台 */
+body.ui-goth .tarot-card-display {
+    background: #120c1a !important; border: 1px solid rgba(184, 165, 245, 0.4) !important;
+    border-radius: 16px !important; box-shadow: 0 0 20px rgba(184, 165, 245, 0.15) !important;
+}
+/* 掰正左上角 TAROT 铭牌 */
+body.ui-goth .tarot-card-display::before {
+    background: #1a1225 !important; color: #9ce5df !important; /* 粉青色符文 */
+    border: 1px solid rgba(156, 229, 223, 0.8) !important;
+    border-radius: 8px !important; transform: rotate(0deg) !important;
+    top: -10px !important; left: 16px !important;
+    box-shadow: 0 0 10px rgba(156, 229, 223, 0.3) !important;
+}
+
+/* 占卜结果小牌 */
+body.ui-goth .tarot-result-card {
+    background: #1a1225 !important; border: 1px dashed rgba(245, 165, 184, 0.5) !important;
+    border-radius: 8px !important; color: #f5a5b8 !important;
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.1) !important;
+}
+body.ui-goth .tarot-result-card.reversed { color: #9ce5df !important; border-color: rgba(156, 229, 223, 0.5) !important; }
+
+/* 历史记录与辞典项 */
+body.ui-goth .tarot-dict-item, body.ui-goth .tarot-history-item {
+    background: #1a1225 !important; border: 1px solid rgba(212, 165, 227, 0.3) !important;
+    border-radius: 12px !important; color: #d4a5e3 !important;
+    margin-bottom: 12px !important; padding: 12px !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. 信箱 (Mail App) - 夜光幽灵信箱 (彻底根除白底信纸！) */
+/* ------------------------------------------------------------ */
+/* 邮件列表卡片 */
+body.ui-goth .mail-item-card {
+    background: #1a1225 !important; border: 1px solid rgba(184, 165, 245, 0.3) !important;
+    border-radius: 16px !important; box-shadow: 0 0 16px rgba(184, 165, 245, 0.1) !important;
+}
+/* 未读邮件高亮：糖果粉发光 */
+body.ui-goth .mail-item-card.unread {
+    background: rgba(245, 165, 184, 0.05) !important;
+    border: 1px solid #f5a5b8 !important;
+    box-shadow: 0 0 16px rgba(245, 165, 184, 0.2) !important;
+}
+/* 邮戳印章 */
+body.ui-goth .mail-stamp { border-color: rgba(212, 165, 227, 0.5) !important; color: rgba(212, 165, 227, 0.5) !important; }
+body.ui-goth .mail-item-card.unread .mail-stamp { border-color: #f5a5b8 !important; color: #f5a5b8 !important; text-shadow: 0 0 6px rgba(245, 165, 184, 0.4) !important;}
+
+/* 邮件发件人与预览文本 */
+body.ui-goth .mail-sender { color: #d4a5e3 !important; }
+body.ui-goth .mail-preview { color: rgba(212, 165, 227, 0.7) !important; }
+body.ui-goth .mail-time { color: #9ce5df !important; }
+
+/* 🌟 轰碎读信界面的白底横线信纸 🌟 */
+body.ui-goth .mail-paper {
+    background-color: #120c1a !important; /* 幽暗底色 */
+    background-image: none !important; /* 干掉信纸横线 */
+    border: 1px dashed rgba(212, 165, 227, 0.5) !important; /* 虚线魔法阵感 */
+    border-radius: 16px !important;
+    color: #f5a5b8 !important; /* 发光粉色文字 */
+    box-shadow: inset 0 0 20px rgba(212, 165, 227, 0.05) !important;
+}
+
+/* 读信弹窗大底 */
+body.ui-goth #mail-read-modal .modal-content {
+    background-color: #0a060e !important;
+    background-image: radial-gradient(rgba(212, 165, 227, 0.08) 1px, transparent 1px) !important;
+    border: 2px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 20px !important;
+}
+/* 信箱弹窗里残留的文字颜色 */
+body.ui-goth #mail-read-title { color: #d4a5e3 !important; text-shadow: 0 0 6px rgba(212, 165, 227, 0.4) !important;}
+body.ui-goth #mail-read-stamp { color: rgba(245, 165, 184, 0.4) !important; border-color: rgba(245, 165, 184, 0.4) !important; }
+
+/* ============================================================ */
+/* 🦇 最终秘术：纪念日大厅与备忘录彻底粉彩哥特化 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 统一替换这两个大应用的底层背景 */
+/* ------------------------------------------------------------ */
+body.ui-goth #anni-global-app,
+body.ui-goth #memo-app {
+    background-color: #0a060e !important; /* 深空紫黑底色 */
+    background-image: radial-gradient(rgba(212, 165, 227, 0.08) 1px, transparent 1px) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 纪念日大厅 (Anniversary Global) - 永恒暗夜石碑 */
+/* ------------------------------------------------------------ */
+/* 纪念日独立卡片 */
+body.ui-goth .anni-g-card {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 20px rgba(184, 165, 245, 0.15) !important;
+}
+/* 左上角 DAY 标签改造：掰正并加上糖果粉荧光 */
+body.ui-goth .anni-g-card::before {
+    background: #1a1225 !important; 
+    color: #f5a5b8 !important;
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important; 
+    transform: rotate(0deg) !important; /* 掰正 */
+    top: -10px !important; left: 16px !important;
+    box-shadow: 0 0 10px rgba(245, 165, 184, 0.3) !important;
+    text-shadow: 0 0 4px rgba(245, 165, 184, 0.5) !important;
+}
+/* 纪念日卡片内部文字发光提亮 */
+body.ui-goth .anni-g-card div { color: #d4a5e3 !important; }
+body.ui-goth .anni-g-card span { color: #f5a5b8 !important; text-shadow: 0 0 6px rgba(245, 165, 184, 0.3) !important; }
+
+/* ------------------------------------------------------------ */
+/* 3. 备忘录 (Memo) - 漂浮的魔法符文板 */
+/* ------------------------------------------------------------ */
+/* 备忘录卡片本体 (消除歪斜，变为整齐悬浮的魔法板) */
+body.ui-goth .memo-note {
+    background-color: #1a1225 !important;
+    border: 1px solid rgba(184, 165, 245, 0.4) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 16px rgba(184, 165, 245, 0.1) !important;
+    transform: rotate(0deg) !important; /* 消除原版的左右歪斜 */
+    margin-bottom: 12px !important;
+}
+
+/* 顶部原本的白色胶带，变成粉青色 (Cyan) 的魔法符印 */
+body.ui-goth .memo-tape {
+    background: #120c1a !important;
+    color: #9ce5df !important; /* 粉青色高亮 */
+    border: 1px solid rgba(156, 229, 223, 0.6) !important;
+    border-radius: 8px !important;
+    transform: rotate(0deg) translateX(-50%) !important; /* 居中且掰正 */
+    top: -10px !important;
+    box-shadow: 0 0 10px rgba(156, 229, 223, 0.2) !important;
+}
+
+/* 备忘录标题：粉紫色，发光下划线 */
+body.ui-goth .memo-title {
+    color: #d4a5e3 !important;
+    border-bottom: 1px dashed rgba(212, 165, 227, 0.4) !important;
+    text-shadow: 0 0 4px rgba(212, 165, 227, 0.3) !important;
+}
+
+/* 备忘录正文内容：糖果粉，保证绝对清晰 */
+body.ui-goth .memo-content {
+    color: #f5a5b8 !important;
+    font-size: 12px !important;
+}
+
+/* 底部的时间戳/标签：粉青色点缀 */
+body.ui-goth .memo-meta {
+    color: rgba(156, 229, 223, 0.7) !important;
+    border-top: 1px dashed rgba(156, 229, 223, 0.2) !important;
+}
+
+/* ============================================================ */
+/* 🦇 终极领域：桌面壁纸、APP图标、悬浮小组件全面粉彩哥特化 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 重铸桌面壁纸 (Wallpaper) - 魔法光晕暗夜背景 */
+/* ------------------------------------------------------------ */
+body.ui-goth #phone {
+    background-color: #0a060e !important; /* 极深空紫黑 */
+    /* 打上对角的粉紫与糖果粉发光渐变，再叠加一层微弱的星光粒子 */
+    background-image: 
+        radial-gradient(circle at 15% 20%, rgba(212, 165, 227, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(245, 165, 184, 0.1) 0%, transparent 40%),
+        radial-gradient(rgba(156, 229, 223, 0.05) 1px, transparent 1px) !important;
+    background-size: 100% 100%, 100% 100%, 20px 20px !important;
+}
+
+/* 桌面背景那些超大的滚动水印文字，变成幽灵紫 */
+body.ui-goth .bg-marquee {
+    color: rgba(212, 165, 227, 0.03) !important;
+    text-shadow: 0 0 20px rgba(212, 165, 227, 0.05) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 彻底消灭虚线！移除所有组件和图标里的内侧虚线框 */
+/* ------------------------------------------------------------ */
+body.ui-goth .widget-inner-border,
+body.ui-goth .icon-img::after,
+body.ui-goth .widget-square::before,
+body.ui-goth .widget-captcha::after,
+body.ui-goth .stack-photo::after {
+    display: none !important; /* 物理超度，绝不残留 */
+}
+
+/* ------------------------------------------------------------ */
+/* 3. 桌面 APP 图标大改造 - 发光黑曜石 */
+/* ------------------------------------------------------------ */
+body.ui-goth .icon-img {
+    background-color: #120c1a !important; /* 极暗底色 */
+    border: 2px solid rgba(212, 165, 227, 0.5) !important;
+    border-radius: 16px !important; /* 大圆角更可爱 */
+    box-shadow: 0 0 16px rgba(212, 165, 227, 0.2), inset 0 0 10px rgba(212, 165, 227, 0.1) !important;
+    transition: all 0.3s ease !important;
+}
+/* 里面的线条图标变成发光的糖果粉 */
+body.ui-goth .icon-img svg {
+    stroke: #f5a5b8 !important; 
+    filter: drop-shadow(0 0 6px rgba(245, 165, 184, 0.6)) !important;
+}
+/* 图标下面的名字文字 */
+body.ui-goth .icon-label {
+    color: #d4a5e3 !important;
+    text-shadow: 0 0 4px rgba(212, 165, 227, 0.4) !important;
+    background: transparent !important;
+    border: none !important;
+    font-size: 11px !important;
+}
+/* 图标按下时的魔法反转反馈 */
+body.ui-goth .icon-box:active .icon-img {
+    background-color: #d4a5e3 !important;
+    box-shadow: 0 0 20px rgba(212, 165, 227, 0.8) !important;
+}
+body.ui-goth .icon-box:active .icon-img svg {
+    stroke: #120c1a !important; /* 反色 */
+    filter: none !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 4. 桌面各类小组件同步黑化与柔和化 */
+/* ------------------------------------------------------------ */
+/* 桌面所有小组件的外框统一样式 */
+body.ui-goth .widget {
+    background-color: #1a1225 !important;
+    border: 1px solid rgba(212, 165, 227, 0.4) !important;
+    border-radius: 16px !important; /* 强制全部大圆角 */
+    box-shadow: 0 0 20px rgba(184, 165, 245, 0.15) !important;
+}
+
+/* 顶部的综合名片组件 */
+body.ui-goth .int-name { background: transparent !important; color: #f5a5b8 !important; border: none !important; text-shadow: 0 0 6px rgba(245, 165, 184, 0.4) !important;}
+body.ui-goth .int-sign { color: #9ce5df !important; border-bottom-color: rgba(156, 229, 223, 0.3) !important; }
+body.ui-goth .int-divider { background: repeating-linear-gradient(90deg, rgba(212,165,227,0.3), rgba(212,165,227,0.3) 4px, transparent 4px, transparent 8px) !important; }
+body.ui-goth .int-divider::after { background: #1a1225 !important; color: #d4a5e3 !important; border-color: rgba(212, 165, 227, 0.4) !important; }
+body.ui-goth .int-music-title { color: #d4a5e3 !important; }
+body.ui-goth .int-music-controls { border-color: rgba(212, 165, 227, 0.4) !important; color: #f5a5b8 !important; border-radius: 8px !important; }
+body.ui-goth .int-music-progress { border-color: transparent !important; background: rgba(212, 165, 227, 0.2) !important; }
+body.ui-goth .int-music-progress::after { background: #9ce5df !important; box-shadow: 0 0 8px #9ce5df !important; }
+
+/* 搜索框组件变胶囊 */
+body.ui-goth .widget-search {
+    background: #120c1a !important;
+    border-radius: 24px !important;
+    color: #d4a5e3 !important;
+}
+body.ui-goth .search-btn { border-color: #f5a5b8 !important; color: #f5a5b8 !important; }
+
+/* 照片组件与拍立得叠层 */
+body.ui-goth .widget-square, 
+body.ui-goth .stack-photo {
+    background: #120c1a !important;
+    border: 1px solid rgba(245, 165, 184, 0.4) !important;
+    border-radius: 16px !important;
+}
+body.ui-goth .square-sign { color: #9ce5df !important; text-shadow: 0 0 4px rgba(156, 229, 223, 0.5) !important; }
+/* 隐藏难看的物理胶带和铁夹子 */
+body.ui-goth .square-clip, body.ui-goth .tape-stack-1, body.ui-goth .tape-stack-2 { display: none !important; }
+
+/* 验证码组件 */
+body.ui-goth .widget-captcha { background: #120c1a !important; }
+body.ui-goth .captcha-header { color: #d4a5e3 !important; border-color: rgba(212,165,227,0.3) !important; }
+body.ui-goth #captcha-text { color: #f5a5b8 !important; }
+body.ui-goth .captcha-barcode { opacity: 0.3 !important; }
+
+/* 电影票据组件 */
+body.ui-goth .widget-ticket { background: #1a1225 !important; }
+body.ui-goth .ticket-left { border-color: rgba(212, 165, 227, 0.3) !important; color: #9ce5df !important; }
+body.ui-goth .ticket-right { color: #f5a5b8 !important; }
+body.ui-goth .ticket-barcode { display: none !important; }
+
+/* ============================================================ */
+/* 🦇 终极净化：桌面残留白块抹除 & 悬浮通知魔法化 🦇 */
+/* ============================================================ */
+
+/* ------------------------------------------------------------ */
+/* 1. 抹除桌面各种小组件里的白色占位图和白底 */
+/* ------------------------------------------------------------ */
+/* 音乐封面、头像、照片占位符统统变深空紫黑 */
+body.ui-goth .int-avatar,
+body.ui-goth .int-music-cover,
+body.ui-goth .captcha-img,
+body.ui-goth .square-img,
+body.ui-goth .chat-avatar,
+body.ui-goth .stack-img {
+    background-color: #1a1225 !important; /* 极暗的深空底色 */
+    border: 1px dashed rgba(212, 165, 227, 0.5) !important; /* 虚线魔法边框 */
+    box-shadow: inset 0 0 10px rgba(212, 165, 227, 0.1) !important;
+}
+
+/* 验证码里的 [ PIC DATA ] 文字颜色修正 */
+body.ui-goth .captcha-img {
+    color: #d4a5e3 !important;
+    text-shadow: 0 0 4px rgba(212, 165, 227, 0.3) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 2. 修复桌面上的白色胶带 (DANGER / CUTE 等) */
+/* ------------------------------------------------------------ */
+body.ui-goth .washi-tape {
+    background-color: #120c1a !important; /* 深紫黑 */
+    color: #f5a5b8 !important; /* 糖果粉文字 */
+    border: 1px solid rgba(245, 165, 184, 0.8) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 0 12px rgba(245, 165, 184, 0.3) !important;
+    text-shadow: 0 0 4px rgba(245, 165, 184, 0.5) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 3. 修复桌面右上角的“白色悬浮编辑按钮” */
+/* ------------------------------------------------------------ */
+body.ui-goth .fab-btn {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(156, 229, 223, 0.6) !important; /* 粉青色边框 */
+    box-shadow: 0 0 16px rgba(156, 229, 223, 0.3) !important;
+}
+body.ui-goth .fab-btn svg {
+    stroke: #9ce5df !important; /* 铅笔图标变成发光粉青色 */
+    filter: drop-shadow(0 0 4px rgba(156, 229, 223, 0.5)) !important;
+}
+body.ui-goth .fab-btn:active {
+    background-color: #9ce5df !important;
+    box-shadow: 0 0 20px #9ce5df !important;
+}
+body.ui-goth .fab-btn:active svg { stroke: #120c1a !important; filter: none !important; }
+
+/* ------------------------------------------------------------ */
+/* 4. 修复图2里的“白色对话气泡框”与“拍立得白边” */
+/* ------------------------------------------------------------ */
+/* 聊天组件大容器 */
+body.ui-goth .widget-chat {
+    background-color: #120c1a !important;
+    border-color: rgba(212, 165, 227, 0.4) !important;
+}
+/* 里面的对话气泡 */
+body.ui-goth .widget-chat .chat-bubble {
+    background-color: #1a1225 !important;
+    border: 1px dashed rgba(212, 165, 227, 0.5) !important;
+    color: #d4a5e3 !important;
+    border-radius: 12px !important;
+}
+/* 隐藏气泡旁边那个碍眼的白底小三角 */
+body.ui-goth .widget-chat .chat-bubble::before { display: none !important; }
+
+/* 拍立得照片的白边底板轰碎 */
+body.ui-goth .stack-photo {
+    background-color: #120c1a !important; /* 黑掉白边 */
+    border: 1px solid rgba(245, 165, 184, 0.4) !important;
+    box-shadow: 0 0 12px rgba(245, 165, 184, 0.15) !important;
+}
+
+/* ------------------------------------------------------------ */
+/* 5. 悬浮通知弹窗 (Toast Notification) 究极魔法化 */
+/* ------------------------------------------------------------ */
+body.ui-goth .notification {
+    background-color: #120c1a !important; /* 极暗底色 */
+    border: 1px solid rgba(245, 165, 184, 0.8) !important; /* 糖果粉强边框 */
+    border-radius: 20px !important; /* 胶囊状 */
+    color: #f5a5b8 !important; /* 发光粉字 */
+    padding: 12px 24px !important;
+    font-size: 13px !important;
+    letter-spacing: 2px !important; /* 增加拉扯感 */
+    box-shadow: 0 0 24px rgba(245, 165, 184, 0.4), inset 0 0 10px rgba(245, 165, 184, 0.1) !important;
+    text-shadow: 0 0 6px rgba(245, 165, 184, 0.6) !important;
+    transform: translateX(-50%) translateY(10px) !important; /* 稍微往下移一点，避免贴边 */
+}
+
+/* ============================================================ */
+/* 🦇 绝对绝杀：塔罗牌意解读框 & 弹窗内顽固白底终极粉碎 🦇 */
+/* ============================================================ */
+
+/* 强行拦截并重塑弹窗内的解读说明框（解牌意、提示框等） */
+body.ui-goth .modal-content div[style*="background"],
+body.ui-goth .modal-content div[style*="border"],
+body.ui-goth .decode-inline-box {
+    background-color: #1a1225 !important; /* 深空幽暗底色 */
+    background-image: none !important;
+    border: 1px dashed rgba(212, 165, 227, 0.6) !important; /* 发光紫虚线 */
+    border-radius: 12px !important; /* 强制大圆角 */
+    color: #f5a5b8 !important; /* 糖果粉色牌意文字 */
+    box-shadow: inset 0 0 16px rgba(212, 165, 227, 0.15) !important;
+    text-shadow: 0 0 4px rgba(245, 165, 184, 0.4) !important;
+    padding: 12px !important;
+}
+
+/* 如果框内还有嵌套的 span 或者段落，确保它们也被点亮 */
+body.ui-goth .modal-content div[style*="background"] *,
+body.ui-goth .modal-content div[style*="border"] *,
+body.ui-goth .decode-inline-box * {
+    color: #f5a5b8 !important;
+}
+
+/* 顺手把底部的 [CLOSE × 关闭] 按钮也做得更精致发光一点 */
+body.ui-goth .modal-content .btn-cancel,
+body.ui-goth .modal-content button {
+    background-color: #120c1a !important;
+    border: 1px solid rgba(156, 229, 223, 0.5) !important; /* 底部关闭用青色点缀 */
+    color: #9ce5df !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 10px rgba(156, 229, 223, 0.2) !important;
+}
+body.ui-goth .modal-content .btn-cancel:active,
+body.ui-goth .modal-content button:active {
+    background-color: #9ce5df !important;
+    color: #120c1a !important;
+}
+
 /* ================= 美化模块 CSS END ================= */
 </style>
 
@@ -10482,14 +12297,16 @@ if ('serviceWorker' in navigator) {
                     <button class="fc-btn" onclick="fcApp.deduplicate()">去重</button>
                 </div>
                 <!-- 分组操作 (状态栏模式下会隐藏) -->
-                <div class="fc-toolbar" id="fc-group-actions">
-                    <button class="fc-btn-outline" style="padding:4px 6px;" onclick="fcApp.createNewGroup()">+ 新建</button>
-                    <select id="fc-group-move-target" class="fc-search-input" style="flex: 1; padding: 4px;">
-                        <option value="">选择目标分组...</option>
-                        <option value="未分组">未分组</option>
-                    </select>
-                    <button class="fc-btn" style="padding:4px 6px;" onclick="fcApp.moveSelectedToGroup()">批量移动</button>
-                </div>
+<div class="fc-toolbar" id="fc-group-actions">
+    <button class="fc-btn-outline" style="padding:4px; font-size:10px;" onclick="fcApp.createNewGroup()">+新建</button>
+    <!-- 👇这是新增的删除分组按钮👇 -->
+    <button class="fc-btn-outline" style="padding:4px; font-size:10px; color:var(--theme-accent); border-color:var(--theme-accent);" onclick="fcApp.deleteCurrentGroup()">-删除</button>
+    <select id="fc-group-move-target" class="fc-search-input" style="flex: 1; padding: 4px; font-size:10px;">
+        <option value="">移动至...</option>
+        <option value="未分组">未分组</option>
+    </select>
+    <button class="fc-btn" style="padding:4px; font-size:10px;" onclick="fcApp.moveSelectedToGroup()">移动</button>
+</div>
             </div>
             
             <!-- 批量导入与数据管理 -->
@@ -11819,8 +13636,12 @@ const STORE_NAME = 'DesktopData';
 let memoryDB = {}; 
 class DB {
     static dbAvailable = true;
+    static dbInstance = null; // 👈 新增：用于缓存数据库连接，防止泄漏
+
     static async init() {
         if (!this.dbAvailable) return null;
+        if (this.dbInstance) return this.dbInstance; // 👈 核心修复：如果已经打开过，直接返回，不再无限创建新连接
+        
         return new Promise((resolve) => {
             try {
                 const request = indexedDB.open(DB_NAME, 1);
@@ -11828,11 +13649,15 @@ class DB {
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME, { keyPath: 'id' });
                 };
-                request.onsuccess = () => resolve(request.result);
+                request.onsuccess = () => {
+                    this.dbInstance = request.result; // 把连接存起来
+                    resolve(this.dbInstance);
+                };
                 request.onerror = () => { this.dbAvailable = false; resolve(null); };
             } catch(e) { this.dbAvailable = false; resolve(null); }
         });
     }
+
     static async get(id) {
         const db = await this.init();
         if (!db) return memoryDB[id];
@@ -11843,6 +13668,7 @@ class DB {
             req.onerror = () => resolve(null);
         });
     }
+
     static async put(data) {
         const db = await this.init();
         if (!db) { memoryDB[data.id] = data; return; }
@@ -11853,7 +13679,8 @@ class DB {
             req.onerror = () => resolve();
         });
     }
-        static async getAll() {
+
+    static async getAll() {
         const db = await this.init();
         if (!db) return Object.values(memoryDB);
         return new Promise((resolve) => {
@@ -11863,6 +13690,7 @@ class DB {
             req.onerror = () => resolve([]);
         });
     }
+
     static async delete(id) {
         const db = await this.init();
         if (!db) { delete memoryDB[id]; return; }
@@ -12265,6 +14093,38 @@ const fcApp = {
         showNotification(`分组 [${name}] 创建成功 ✧`);
     },
 
+    async deleteCurrentGroup() {
+        // 1. 获取当前下拉框选中的分组
+        const currentGroup = document.getElementById('fc-group-filter').value;
+        
+        // 2. 拦截系统默认分组
+        if (currentGroup === '全部' || currentGroup === '未分组') {
+            return showNotification("基础默认分组不可删除喔 ⨯");
+        }
+        
+        // 3. 二次确认，明确告知用户字卡不会丢
+        const ok = await showCustomConfirm(`确定要删除分组 [${currentGroup}] 吗？\n\n※ 分组删除后，里面的字卡不会丢失，会自动退回【未分组】中。`);
+        if (!ok) return;
+
+        // 4. 从分组列表中抹除这个名字
+        this.groups = this.groups.filter(g => g !== currentGroup);
+
+        // 5. 遍历字卡，把属于这个分组的字卡打入冷宫（未分组）
+        let rescueCount = 0;
+        this.data.forEach(item => {
+            if (item.category === 'chat' && item.group === currentGroup) {
+                item.group = '未分组';
+                rescueCount++;
+            }
+        });
+
+        // 6. 切换回全部视图，保存并刷新
+        document.getElementById('fc-group-filter').value = '全部';
+        await this.save();
+        this.render();
+        showNotification(`已删除分组，释放了 ${rescueCount} 张字卡 ✧`);
+    },
+    
     async moveSelectedToGroup() {
         const targetGroup = document.getElementById('fc-group-move-target').value;
         if(!targetGroup) return showNotification("请先选择目标分组 ⨯");
@@ -14410,6 +16270,7 @@ async function handleFontUpload(input) {
     }
 }
 
+// 终极完美版字体应用
 function applyCustomFont(fontUrl) {
     let fontStyle = document.getElementById('custom-font-style');
     if (!fontStyle) {
@@ -14418,13 +16279,13 @@ function applyCustomFont(fontUrl) {
         document.head.appendChild(fontStyle);
     }
     
-    // 动态生成 @font-face，并用 !important 强制覆盖所有标签的字体
+    // 用精准标签代替全局 * 号，既保证按钮和输入框有字体，又绝对不会卡顿！
     fontStyle.innerHTML = `
         @font-face {
             font-family: 'MyYumeFont';
             src: url('${fontUrl}');
         }
-        * {
+        body, button, input, textarea, select {
             font-family: 'MyYumeFont', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
         }
     `;
