@@ -405,6 +405,33 @@ body.dark-mode .notification {
     .fc-item-del {
         cursor: pointer; font-size: 14px; font-weight: bold; color: var(--theme-main) ; padding: 0 4px;
     }
+    
+    /* ================= 修复：字卡列表中的分组小标签美化 ================= */
+/* 专门精准抓取左侧的分组标签 */
+.fc-group-tag {
+    font-size: 9px !important;
+    font-weight: 900 !important;
+    color: #ffffff !important; /* 白字 */
+    background: var(--theme-main) !important; /* 主题色底，更醒目 */
+    border: 1px solid var(--theme-main) !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    letter-spacing: 1px !important;
+    box-shadow: 2px 2px 0 rgba(43,43,43,0.2) !important;
+    margin-right: 8px !important; /* 和右边的句子拉开明显的距离 */
+    display: inline-block !important;
+    vertical-align: middle !important; /* 和右边的字保持垂直居中对齐 */
+}
+
+/* 夜间模式适配 */
+body.dark-mode .fc-group-tag {
+    color: #121212 !important;
+    background: #d4d4d4 !important;
+    border-color: #d4d4d4 !important;
+    box-shadow: 2px 2px 0 #000 !important;
+}
+
     /* ================= 字卡模块 CSS END ================= */
     
      /* ================= APP真实过渡动画 CSS START ================= */
@@ -12032,6 +12059,8 @@ body.ui-goth .modal-content button:active {
     background-color: #9ce5df !important;
     color: #120c1a !important;
 }
+
+
 
 /* ================= 美化模块 CSS END ================= */
 </style>
