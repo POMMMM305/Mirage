@@ -14105,18 +14105,12 @@ const fcApp = {
         this.switchTab(this.currentCategory); // 打开时保持上次的模式
     },
 
-    close() {
-    const appEl = document.getElementById('chat-room-app');
+close() {
+    const appEl = document.getElementById('flashcard-app');
     if (enableAppAnimation) {
         appEl.classList.remove('app-open-anim'); appEl.classList.add('app-close-anim');
-        setTimeout(() => { 
-            appEl.style.display = 'none'; 
-            document.getElementById('chat-msg-container').innerHTML = ''; // 👈 新增：退出后瞬间清空内存负担
-        }, 200);
-    } else { 
-        appEl.style.display = 'none'; 
-        document.getElementById('chat-msg-container').innerHTML = ''; // 👈 新增：退出后瞬间清空内存负担
-    }
+        setTimeout(() => { appEl.style.display = 'none'; }, 200);
+    } else { appEl.style.display = 'none'; }
 },
 
     async createNewGroup() {
@@ -14866,32 +14860,68 @@ loadMore() {
 },
 
 async open(role) {
-this.currentRole = role;
-this.displayCount = 35; 
+    this.currentRole = role;
+    this.displayCount = 35; 
     document.getElementById('chat-title-name').innerText = role.name;
     document.getElementById('chat-top-avatar').style.backgroundImage = `url(${role.avatar})`;
     
     const res = await DB.get('ChatData_' + role.id);
     this.messages = (res && res.list) ? res.list : [];
     
-    // 【关键修改】：先显示外壳，再渲染内容，浏览器才能算准高度！
+    // 读取专属配置
+    const configRes = await DB.get('ChatConfig_' + role.id);
+    this.currentSettings = configRes ? configRes.data : { myAvatar:'', chatBg:'', bubbleCss:'' };
+    this.applySettingsUI();
+
     const appEl = document.getElementById('chat-room-app');
+    
+    // 【第 1 步：隐身准备】先让外壳具备高度，但保持 100% 透明（你看不见）
     appEl.style.display = 'flex';
-    
-    this.render();
-    
     if (enableAppAnimation) { 
-        appEl.classList.remove('app-close-anim'); 
-        appEl.classList.add('app-open-anim'); 
+        appEl.style.opacity = '0'; 
+        appEl.style.transform = 'translateY(10px)'; 
+    }
+
+    // 【第 2 步：CSS 性能魔法】
+    let avatarStyleBlock = document.getElementById('dynamic-avatar-style');
+    if (!avatarStyleBlock) {
+        avatarStyleBlock = document.createElement('style');
+        avatarStyleBlock.id = 'dynamic-avatar-style';
+        document.head.appendChild(avatarStyleBlock);
+    }
+    avatarStyleBlock.innerHTML = `
+        .chat-msg.left .msg-avatar { background-image: url('${role.avatar || ''}') !important; }
+        .chat-msg.right .msg-avatar { background-image: url('${this.currentSettings?.myAvatar || ''}') !important; }
+    `;
+
+    // 【关键修复：提前画气泡！】
+    // 在聊天室还是隐身状态时，直接把气泡画好并滚到底部！
+    // 因为拔掉了 Base64 头像，现在瞬间就能画完，不会卡顿！
+    this.render();
+
+    // 【第 3 步：瞬间滑出】等浏览器花 20 毫秒把气泡彻彻底底排好版，再带着稳稳当当的气泡一起滑出屏幕！
+    setTimeout(() => {
+        if (enableAppAnimation) {
+            appEl.style.opacity = '1'; // 取消隐身
+            appEl.style.transform = 'none';
+            appEl.classList.remove('app-close-anim'); 
+            appEl.classList.add('app-open-anim'); 
+        }
+    }, 20);
+},
+close() {
+    const appEl = document.getElementById('chat-room-app');
+    if (enableAppAnimation) {
+        appEl.classList.remove('app-open-anim'); appEl.classList.add('app-close-anim');
+        setTimeout(() => { 
+            appEl.style.display = 'none'; 
+            document.getElementById('chat-msg-container').innerHTML = ''; // 退出后瞬间清空内存负担
+        }, 200);
+    } else { 
+        appEl.style.display = 'none'; 
+        document.getElementById('chat-msg-container').innerHTML = ''; // 退出后瞬间清空内存负担
     }
 },
-    close() {
-        const appEl = document.getElementById('chat-room-app');
-        if (enableAppAnimation) {
-            appEl.classList.remove('app-open-anim'); appEl.classList.add('app-close-anim');
-            setTimeout(() => { appEl.style.display = 'none'; }, 200);
-        } else { appEl.style.display = 'none'; }
-    },
     async save() { await DB.put({ id: 'ChatData_' + this.currentRole.id, list: this.messages }); },
     
         toggleCombo() {
@@ -15291,6 +15321,11 @@ this.render('keep');
 // 👇 加上 isAppend 开关
 render(autoScroll = true, isAppend = false) {
     const container = document.getElementById('chat-msg-container');
+    
+    // --- 性能核弹：临时拔掉巨大的 Base64 数据 ---
+    const tempTaAvatar = this.currentRole ? this.currentRole.avatar : '';
+    if (this.currentRole) this.currentRole.avatar = '';
+
     
     const oldScrollTop = container.scrollTop;
     const oldScrollHeight = container.scrollHeight; 
@@ -15849,6 +15884,8 @@ if (msg.type === 'tarot') {
 
     // 👇防卡顿核心：将内存里拼好的几十个气泡，一次性重绘到屏幕上！
 container.appendChild(fragment);
+// --- 性能核弹：恢复刚刚拔掉的数据 ---
+if (this.currentRole) this.currentRole.avatar = tempTaAvatar;
 
 // 4. 滚动控制
 if (autoScroll === true) {
@@ -16711,22 +16748,7 @@ chatApp.render = function(autoScroll = true, isAppend = false) {
     if (container.className !== targetClass) {
         container.className = targetClass;
     }
-
-    // 渲染完后，替换 "我" 的头像
-    if (this.currentSettings && this.currentSettings.myAvatar) {
-        // 🔥 极致增量优化：单条发送时只精确寻找最后 1 个气泡，绝不扫描全屏！
-        if (isAppend) {
-            const lastEl = container.lastElementChild;
-            if (lastEl && lastEl.classList.contains('right')) {
-                const avatarEl = lastEl.querySelector('.msg-avatar');
-                if (avatarEl) avatarEl.style.backgroundImage = `url(${this.currentSettings.myAvatar})`;
-            }
-        } else {
-            const msgs = container.querySelectorAll('.chat-msg.right .msg-avatar');
-            msgs.forEach(el => el.style.backgroundImage = `url(${this.currentSettings.myAvatar})`);
-        }
-    }
-};
+}; // 👈 必须补上这一行！否则全白屏！
 /* ================= 聊天室专属设置模块 JS END ================= */
 
 /* ================= 电话功能 JS START ================= */
