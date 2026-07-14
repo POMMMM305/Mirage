@@ -14106,12 +14106,18 @@ const fcApp = {
     },
 
     close() {
-        const appEl = document.getElementById('flashcard-app');
-        if (enableAppAnimation) {
-            appEl.classList.remove('app-open-anim'); appEl.classList.add('app-close-anim');
-            setTimeout(() => { appEl.style.display = 'none'; }, 200);
-        } else { appEl.style.display = 'none'; }
-    },
+    const appEl = document.getElementById('chat-room-app');
+    if (enableAppAnimation) {
+        appEl.classList.remove('app-open-anim'); appEl.classList.add('app-close-anim');
+        setTimeout(() => { 
+            appEl.style.display = 'none'; 
+            document.getElementById('chat-msg-container').innerHTML = ''; // 👈 新增：退出后瞬间清空内存负担
+        }, 200);
+    } else { 
+        appEl.style.display = 'none'; 
+        document.getElementById('chat-msg-container').innerHTML = ''; // 👈 新增：退出后瞬间清空内存负担
+    }
+},
 
     async createNewGroup() {
         const groupName = await showCustomPrompt("请输入新分组名称：");
