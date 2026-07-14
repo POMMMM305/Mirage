@@ -589,7 +589,7 @@ body.dark-mode .msg-signal-box::before { color: #555; }
 
     /* 聊天室页面基础 */
     .chat-body { 
-    flex: 1; overflow-y: auto; padding: 20px 15px; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; 
+    flex: 1; overflow-y: auto; padding: 20px 15px 130px 15px; display: flex; flex-direction: column; gap: 20px; scrollbar-width: none; 
     /* 👇 彻底封锁重绘范围，不再牵连背后的百大组件 */
     contain: strict; 
     will-change: transform, scroll-position;
@@ -844,7 +844,8 @@ body.dark-mode .fav-single-text, body.dark-mode .anni-name { color: #d4d4d4; }
 
 /* ================= 新版极繁聊天室底部 (手账轻盈版) ================= */
 .cf-new-footer {
-    position: relative; background: transparent; padding: 10px 15px 15px 15px; z-index: 10;
+    position: absolute !important; bottom: 0 !important; width: 100%;
+    background: transparent; padding: 10px 15px 15px 15px; z-index: 10;
     display: flex; flex-direction: column; gap: 15px;
     flex-shrink: 0; 
     padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px)); /* 👈 照抄了字卡的环境变量计算 */
@@ -8569,6 +8570,1645 @@ body.ui-wabi .icon-img {
     word-break: break-all !important;
 }
 
+
+/* =========================================================
+   ☁️ THEME: KAWAII MINIMAL (可爱极简) - 彻底去线框高级版
+   ========================================================= */
+
+body.ui-kawaii {
+    /* 核心色板：芋泥白脱配色，抛弃高饱和粉色 */
+    --km-bg: #f8f9fa;          /* 极简偏冷的珍珠白底色 */
+    --km-card: #ffffff;        /* 纯白卡片 */
+    --km-primary: #e8defe;     /* 芋泥淡紫 (气泡、主按钮) */
+    --km-primary-text: #5b428f;/* 芋泥深紫 (用于紫色背景上的文字) */
+    --km-accent: #e0f2fe;      /* 婴儿蓝 (用于点缀和次要标签) */
+    --km-text-main: #334155;   /* 板岩深灰 (极简风不用纯黑) */
+    --km-text-sub: #94a3b8;    /* 柔和浅灰 */
+    
+    /* 真正的极简阴影：完全无色彩倾向的纯灰弥散，没有任何荧光感 */
+    --km-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04); 
+    --km-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+    --km-shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.08);
+}
+
+/* --- 1. App 基础底色与背景 (绝对纯净) --- */
+body.ui-kawaii #msg-list-app, 
+body.ui-kawaii #chat-room-app {
+    background-color: var(--km-bg) !important;
+    background-image: none !important; 
+}
+
+/* ================= 传讯列表页重构 ================= */
+
+/* 顶部导航栏：无边框白云 */
+body.ui-kawaii .msg-header {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px);
+    border: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    color: var(--km-text-main) !important;
+    border-radius: 0 0 32px 32px !important; /* 超大圆角 */
+    padding-bottom: 20px !important;
+}
+
+/* 列表按钮：芋泥色纯色药丸，无边框 */
+body.ui-kawaii .msg-btn {
+    border: none !important;
+    background: var(--km-primary) !important;
+    color: var(--km-primary-text) !important;
+    border-radius: 999px !important;
+    padding: 8px 16px !important;
+    box-shadow: none !important;
+    transition: all 0.2s ease !important;
+}
+body.ui-kawaii .msg-btn:active { transform: scale(0.92) !important; }
+
+/* 列表卡片：极致白卡片，纯粹靠阴影区分 */
+body.ui-kawaii .role-item {
+    border: none !important;
+    border-radius: 28px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-md) !important;
+    padding: 18px !important;
+    margin: 0 8px !important;
+    transition: all 0.3s ease !important;
+}
+body.ui-kawaii .role-item::before { display: none !important; }
+body.ui-kawaii .role-item:active {
+    transform: scale(0.97) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+
+body.ui-kawaii .role-avatar {
+    border-radius: 50% !important;
+    border: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    transform: none !important;
+    width: 56px !important; height: 56px !important;
+}
+body.ui-kawaii .role-name {
+    border: none !important;
+    color: var(--km-text-main) !important;
+    font-size: 17px !important;
+    font-weight: 900 !important;
+}
+body.ui-kawaii .role-last { color: var(--km-text-sub) !important; font-weight: bold !important; font-size: 12px !important;}
+
+/* 添加按钮：悬浮的紫色大圆圈 */
+body.ui-kawaii .msg-fab-add {
+    background: var(--km-primary-text) !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: var(--km-shadow-lg) !important;
+    width: 60px !important; height: 60px !important;
+}
+
+/* ================= 聊天室顶部重构 ================= */
+
+body.ui-kawaii .ch-new-header {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 20px 15px 10px 15px !important;
+}
+
+/* 核心名片：无边框悬浮大白卡 */
+body.ui-kawaii .ch-profile-card {
+    border: none !important;
+    border-radius: 32px !important;
+    box-shadow: var(--km-shadow-lg) !important;
+    background: var(--km-card) !important;
+    padding: 24px 20px !important;
+}
+body.ui-kawaii .ch-profile-card::after,
+body.ui-kawaii .ch-profile-card::before,
+body.ui-kawaii .ch-stamp,
+body.ui-kawaii .ch-clip,
+body.ui-kawaii .ch-status-barcode { display: none !important; }
+
+/* 顶部操作按钮：浅灰底色胶囊 */
+body.ui-kawaii .ch-back-tape,
+body.ui-kawaii .ch-sys-btn {
+    top: 5px !important;
+    border-radius: 999px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #f1f5f9 !important; /* 浅板岩灰 */
+    color: var(--km-text-main) !important;
+    transform: none !important;
+    padding: 8px 18px !important;
+    font-size: 12px !important;
+}
+body.ui-kawaii .ch-back-tape { left: 5px !important; }
+body.ui-kawaii .ch-sys-btn { right: 5px !important; }
+
+body.ui-kawaii .ch-avatar {
+    border-radius: 50% !important;
+    border: none !important;
+    box-shadow: var(--km-shadow-md) !important;
+    transform: none !important;
+    width: 70px !important; height: 70px !important;
+}
+body.ui-kawaii .ch-name {
+    background: none !important; 
+    color: var(--km-text-main) !important;
+    font-size: 22px !important;
+    font-weight: 900 !important;
+}
+/* 状态栏变成婴儿蓝小胶囊 */
+body.ui-kawaii .ch-status-slot {
+    border: none !important;
+    background: var(--km-accent) !important; 
+    color: #0369a1 !important; /* 深海蓝文字 */
+    border-radius: 999px !important;
+    padding: 6px 14px !important;
+    font-weight: 800 !important;
+}
+
+/* ================= 聊天气泡重构 ================= */
+
+/* 系统时间/提示：变成极简淡灰文字，不带任何框线 */
+body.ui-kawaii .msg-time, body.ui-kawaii .msg-system-box {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--km-text-sub) !important;
+    font-weight: bold !important;
+}
+
+/* 对方的气泡：纯白底色 + 中性灰文字 */
+body.ui-kawaii .chat-msg.left .msg-bubble {
+    background: #ffffff !important;
+    border: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    border-radius: 24px 24px 24px 6px !important; /* 更加圆润 */
+    color: var(--km-text-main) !important;
+    padding: 14px 20px !important;
+}
+
+/* 我的气泡：芋泥紫底色 + 深紫文字，完美区分 */
+body.ui-kawaii .chat-msg.right .msg-bubble {
+    background: var(--km-primary) !important;
+    border: none !important;
+    box-shadow: var(--km-shadow-sm) !important; 
+    border-radius: 24px 24px 6px 24px !important;
+    color: var(--km-primary-text) !important;
+    padding: 14px 20px !important;
+}
+
+/* 气泡标签（如图片/档案角标）：全透明背景+灰色文字 */
+body.ui-kawaii .chat-tape {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    transform: none !important; 
+    color: var(--km-text-sub) !important;
+    top: -16px !important; 
+    font-size: 10px !important;
+}
+
+body.ui-kawaii .chat-img-msg {
+    border: 6px solid #fff !important;
+    border-radius: 24px !important;
+    box-shadow: var(--km-shadow-md) !important;
+}
+
+/* 正在输入：变成干净的悬浮小药丸 */
+body.ui-kawaii #chat-typing-status {
+    border: none !important;
+    background: rgba(255,255,255,0.95) !important;
+    box-shadow: var(--km-shadow-md) !important;
+    border-radius: 999px !important;
+    padding: 6px 14px 6px 6px !important;
+}
+body.ui-kawaii .typing-tape { display: none !important; } 
+body.ui-kawaii .typing-avatar { border: none !important; border-radius: 50% !important; }
+body.ui-kawaii .typing-text { color: var(--km-text-sub) !important; font-weight: normal !important; }
+
+/* ================= 底部输入区重构 ================= */
+
+body.ui-kawaii .cf-new-footer {
+    background: rgba(248, 249, 250, 0.8) !important; /* 偏灰的白，融于背景 */
+    backdrop-filter: blur(20px);
+    border-top: none !important;
+}
+body.ui-kawaii .cf-new-footer::before { display: none !important; }
+body.ui-kawaii .cf-input-collage::before { display: none !important; } /* 直接去掉了输入框左上角的提示词，更极致 */
+
+/* 输入框：无边框纯白圆润药丸 */
+body.ui-kawaii .cf-input-scrap {
+    border-radius: 999px !important;
+    border: none !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    color: var(--km-text-main) !important;
+    padding: 12px 20px !important;
+}
+body.ui-kawaii .cf-input-scrap:focus { box-shadow: var(--km-shadow-md) !important; }
+
+/* 发送按钮：深紫圆点，极简有质感 */
+body.ui-kawaii .cf-send-stamp {
+    border-radius: 50% !important;
+    border: none !important;
+    background: var(--km-primary-text) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    width: 46px !important; height: 46px !important;
+    flex-shrink: 0 !important;
+}
+body.ui-kawaii .cf-send-stamp .stamp-inner { color: #fff !important; }
+
+/* 功能标签 (档案袋、图片、塔罗等)：白底灰字，极其干净 */
+body.ui-kawaii .cf-tag {
+    border-radius: 999px !important;
+    border: none !important;
+    background: var(--km-card) !important;
+    color: var(--km-text-sub) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 6px 14px !important;
+}
+/* 选中时变成婴儿蓝 */
+body.ui-kawaii .cf-tag.active {
+    background: var(--km-accent) !important; 
+    color: #0369a1 !important; 
+    box-shadow: none !important;
+}
+
+/* 归档按钮（时钟图标）：从方形变成小圆球 */
+body.ui-kawaii .ch-archive-btn {
+    border-radius: 50% !important;
+    border: none !important;
+    box-shadow: var(--km-shadow-md) !important;
+    transform: none !important;
+    width: 50px !important; height: 50px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+}
+body.ui-kawaii .ch-archive-btn::before, 
+body.ui-kawaii .ch-archive-btn .ch-archive-text { display: none !important; } /* 只保留图标 */
+body.ui-kawaii .ch-archive-btn .ch-archive-icon { margin: 0 !important; font-size: 18px !important; color: var(--km-primary-text) !important; }
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 聊天室卡片与细节追加
+   ========================================================= */
+
+/* 1. 彻底干掉气泡角落的悬浮标签 (You / Me) */
+body.ui-kawaii .chat-tape {
+    display: none !important;
+}
+
+/* 2. 消息已读/未读状态 (变得极其微弱、无边框) */
+body.ui-kawaii .msg-read-text {
+    border-bottom: none !important;
+    color: var(--km-text-sub) !important;
+    font-size: 10px !important;
+    opacity: 0.6;
+}
+body.ui-kawaii .msg-read-check {
+    color: var(--km-text-sub) !important;
+    opacity: 0.6;
+}
+
+/* 3. 系统消息与撤回消息 (纯灰胶囊，无任何边框) */
+body.ui-kawaii .msg-system-box, 
+body.ui-kawaii .msg-recall-content {
+    border: none !important;
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-radius: 999px !important;
+    color: var(--km-text-sub) !important;
+    padding: 8px 20px !important;
+    box-shadow: none !important;
+    font-weight: normal !important;
+}
+body.ui-kawaii .msg-recall-sys {
+    color: var(--km-text-sub) !important;
+    font-weight: normal !important;
+}
+
+/* 4. 引用回复区块 */
+/* 输入框上方的引用预览条 */
+body.ui-kawaii #quote-preview-bar {
+    border: none !important;
+    border-radius: 20px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-md) !important;
+    margin-bottom: 12px !important;
+    padding: 10px 16px !important;
+}
+body.ui-kawaii #quote-preview-bar::before { display: none !important; } /* 去掉原版的粗糙引号 */
+/* 气泡内的被引用内容 */
+body.ui-kawaii .msg-quote-block {
+    border: none !important;
+    border-radius: 12px !important;
+    background: rgba(0, 0, 0, 0.04) !important; /* 对方的白色气泡里用浅灰 */
+    color: var(--km-text-sub) !important;
+    padding: 10px 14px !important;
+    margin-top: 4px !important;
+    margin-bottom: 10px !important;
+}
+/* 我发出的紫色气泡里的引用区块，要融进紫色 */
+body.ui-kawaii .chat-msg.right .msg-quote-block {
+    background: rgba(255, 255, 255, 0.3) !important; 
+    color: var(--km-primary-text) !important;
+}
+
+/* ================= 各种卡片大重构 (纯白底、果冻大圆角、淡彩色小药丸标签) ================= */
+
+/* 卡片通用底座：去网格、去边框、统一阴影 */
+body.ui-kawaii .msg-red-packet,
+body.ui-kawaii .msg-anni-share,
+body.ui-kawaii .decision-ask-box,
+body.ui-kawaii .decision-ans-box,
+body.ui-kawaii .tacit-ask-box,
+body.ui-kawaii .tacit-ans-box,
+body.ui-kawaii .msg-tarot-box,
+body.ui-kawaii .msg-recipe-box,
+body.ui-kawaii .msg-diary-invite,
+body.ui-kawaii .msg-memo-alert {
+    background: var(--km-card) !important;
+    background-image: none !important; /* 干掉所有条纹和波点网格 */
+    border: none !important;
+    border-radius: 28px !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 20px !important;
+}
+
+/* 原本那种挂在卡片外面的斜胶带标题，全部变成卡片内部的圆润小胶囊 */
+body.ui-kawaii .msg-anni-share::before,
+body.ui-kawaii .decision-ask-box::before,
+body.ui-kawaii .decision-ans-box::before,
+body.ui-kawaii .tacit-ask-box::before,
+body.ui-kawaii .tacit-ans-box::before,
+body.ui-kawaii .msg-tarot-box::before,
+body.ui-kawaii .msg-recipe-box::before,
+body.ui-kawaii .msg-diary-invite::before,
+body.ui-kawaii .msg-memo-alert::before {
+    position: relative !important; 
+    display: inline-block !important;
+    top: 0 !important; left: 0 !important;
+    transform: none !important;
+    border: none !important;
+    border-radius: 999px !important;
+    padding: 6px 14px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    margin-bottom: 12px !important;
+}
+
+/* --- 卡片细分色彩定制 (极简低饱和马卡龙色) --- */
+
+/* 抉择提问卡片 (婴儿蓝) */
+body.ui-kawaii .decision-ask-box::before { background: var(--km-accent) !important; color: #0369a1 !important; content: '抉择' !important;}
+body.ui-kawaii .decision-title { border: none !important; color: var(--km-text-sub) !important; }
+body.ui-kawaii .decision-content { color: var(--km-text-main) !important; background: transparent !important; }
+
+/* 抉择回答卡片 (蜜桃粉) */
+body.ui-kawaii .decision-ans-box::before { background: #fce7f3 !important; color: #be185d !important; content: '启示' !important; }
+body.ui-kawaii .decision-ans-box .decision-content { color: #be185d !important; }
+
+/* 默契问答卡片 (芋泥紫) */
+body.ui-kawaii .tacit-ask-box::before { background: var(--km-primary) !important; color: var(--km-primary-text) !important; content: '默契问答' !important; }
+body.ui-kawaii .tacit-ans-box::before { background: var(--km-primary) !important; color: var(--km-primary-text) !important; content: '默契结果' !important; }
+body.ui-kawaii .tacit-title { border: none !important; color: var(--km-text-main) !important; }
+body.ui-kawaii .tacit-stamp { border-style: solid !important; opacity: 0.1 !important; } /* 印章变极淡 */
+
+/* 塔罗牌 (浅靛蓝) */
+body.ui-kawaii .msg-tarot-box::before { background: #e0e7ff !important; color: #4338ca !important; content: '命运指引' !important; }
+
+/* 食谱/饮食 (淡奶油橘) */
+body.ui-kawaii .msg-recipe-box::before { background: #ffedd5 !important; color: #c2410c !important; content: '饮食手账' !important; }
+
+/* 交换日记 (薄荷绿) */
+body.ui-kawaii .msg-diary-invite::before { background: #d1fae5 !important; color: #047857 !important; content: '交换日记' !important; }
+
+/* 备忘录提醒 (芝士黄) */
+body.ui-kawaii .msg-memo-alert::before { background: #fef08a !important; color: #854d0e !important; content: '备忘提醒' !important; }
+
+/* 红包/资金票据 (特殊定制：全粉背景，极其圆润) */
+body.ui-kawaii .msg-red-packet {
+    background: #fff0f2 !important; /* 婴儿粉底色 */
+    flex-direction: column !important; 
+    align-items: center !important;
+    justify-content: center !important;
+}
+body.ui-kawaii .rp-left, body.ui-kawaii .rp-tape, body.ui-kawaii .rp-stamp { display: none !important; } /* 干掉左侧竖排字、胶带、双层印章 */
+body.ui-kawaii .rp-right { padding: 10px !important; text-align: center; }
+body.ui-kawaii .rp-title { border: none !important; color: #fda4af !important; font-size: 13px !important; }
+body.ui-kawaii .rp-desc { color: #f43f5e !important; font-size: 26px !important; }
+
+/* 5. 长按气泡弹出的操作菜单 (长按多选、复制、撤回等) */
+body.ui-kawaii #chat-long-press-menu {
+    border: none !important;
+    border-radius: 28px !important;
+    box-shadow: var(--km-shadow-lg) !important;
+    background: var(--km-card) !important;
+    padding: 16px !important;
+}
+body.ui-kawaii #chat-long-press-menu::before { display: none !important; } /* 去掉外挂的 ACTION 标签 */
+body.ui-kawaii .chat-menu-item {
+    border: none !important;
+    background: var(--km-bg) !important;
+    border-radius: 16px !important;
+    color: var(--km-text-main) !important;
+    padding: 10px 0 !important;
+}
+body.ui-kawaii .chat-menu-item:active { background: var(--km-primary) !important; color: var(--km-primary-text) !important; transform: scale(0.95); }
+body.ui-kawaii .chat-menu-item.danger { color: #f43f5e !important; }
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 细节打磨追加 (红包、塔罗、电波、时间戳)
+   ========================================================= */
+
+/* 1. 修复红包字体过大、排版溢出的问题 */
+body.ui-kawaii .rp-title {
+    font-size: 11px !important; 
+    color: #f472b6 !important; /* 柔和的粉色 */
+    margin-bottom: 4px !important;
+}
+body.ui-kawaii .rp-desc {
+    font-size: 18px !important; /* 从 26px 缩小到 18px */
+    color: #e11d48 !important; /* 树莓红，点缀色 */
+    font-weight: 800 !important;
+    line-height: 1.3 !important;
+    white-space: normal !important; /* 允许换行，防止文字把卡片撑爆 */
+    word-break: break-all !important;
+}
+
+/* 2. 塔罗牌内部结果卡片改造 (去虚线，变果冻小方块) */
+body.ui-kawaii .tarot-result-card {
+    border: none !important;
+    background: #eef2ff !important; /* 极淡的婴儿蓝底色 */
+    border-radius: 12px !important; /* 圆润包边 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03) !important; /* 极弱阴影 */
+    color: #4f46e5 !important; /* 柔和靛蓝文字 */
+    padding: 8px 6px !important;
+    margin: 4px !important;
+}
+/* 逆位塔罗牌颜色特殊处理 */
+body.ui-kawaii .tarot-result-card.reversed {
+    color: #e11d48 !important; /* 逆位用树莓红 */
+    background: #fff1f2 !important; /* 极淡的粉红底色 */
+}
+
+/* 3. 电波气泡 (Signal Box) 改造：去虚线边框，变成轻盈云朵 */
+body.ui-kawaii .msg-signal-box {
+    border: none !important;
+    border-radius: 20px !important;
+    padding: 12px 18px !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+/* 对方的电波 (左) */
+body.ui-kawaii .chat-msg.left .msg-signal-box {
+    background: #ffffff !important; 
+    color: var(--km-text-main) !important;
+}
+/* 我的电波 (右) - 融入芋泥紫主题 */
+body.ui-kawaii .chat-msg.right .msg-signal-box {
+    background: var(--km-primary) !important; 
+    color: var(--km-primary-text) !important;
+}
+/* 电波顶部的小标签 "〰 WAVE" */
+body.ui-kawaii .msg-signal-box::before {
+    color: var(--km-text-sub) !important;
+    font-size: 9px !important;
+    font-weight: 800 !important;
+    opacity: 0.6 !important;
+    top: -16px !important; /* 稍微拉开一点距离 */
+}
+
+/* 4. 聊天时间戳微调 (极简高级感) */
+body.ui-kawaii .msg-time {
+    font-size: 10px !important;
+    color: var(--km-text-sub) !important;
+    font-weight: 600 !important; /* 字重减轻，不用太粗 */
+    letter-spacing: 0.5px !important; /* 增加字间距，显得更通透 */
+    margin-bottom: 6px !important; /* 稍微靠近下方气泡 */
+    opacity: 0.8 !important;
+    padding: 0 4px !important;
+}
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 弹窗、档案、设置、电话全量极简重构
+   ========================================================= */
+
+/* 1. “查看更早的消息” 按钮改造 */
+body.ui-kawaii .chat-load-more-btn {
+    background: var(--km-card) !important;
+    border-radius: 999px !important;
+    padding: 10px 20px !important;
+    color: var(--km-text-sub) !important;
+    text-decoration: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    display: inline-block !important;
+    margin: 10px auto 20px auto !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* 2. 所有弹窗 (如：点开红包/资金、确认框) 去网格、去边框 */
+body.ui-kawaii .rp-modal-content,
+body.ui-kawaii .modal-content {
+    background: var(--km-bg) !important;
+    background-image: none !important; /* 干掉网格纸背景 */
+    border: none !important;
+    border-radius: 32px !important; /* 巨型果冻圆角 */
+    box-shadow: var(--km-shadow-lg) !important;
+    padding: 24px !important;
+}
+body.ui-kawaii .modal-content::before,
+body.ui-kawaii .tape-rp,
+body.ui-kawaii .rp-stamp-modal { display: none !important; } /* 干掉内部的虚线圈、胶带、印章 */
+
+/* 弹窗内部区块 (如：资金余额框) */
+body.ui-kawaii .rp-balance-box {
+    background: var(--km-card) !important;
+    border: none !important;
+    border-radius: 20px !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 20px !important;
+}
+
+/* 所有的输入框 (弹窗内、设置内) 变成极简胶囊 */
+body.ui-kawaii .modal-content input[type="text"],
+body.ui-kawaii .cs-textarea,
+body.ui-kawaii .fc-search-input {
+    background: #f1f5f9 !important; /* 极淡的板岩灰底色 */
+    border: none !important;
+    border-radius: 16px !important;
+    padding: 12px 16px !important;
+    color: var(--km-text-main) !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important; /* 微微的内凹感 */
+}
+
+/* 弹窗和面板里的所有通用按钮 */
+body.ui-kawaii .modal-actions button,
+body.ui-kawaii .st-btn,
+body.ui-kawaii .fc-btn,
+body.ui-kawaii .fc-btn-outline {
+    border: none !important;
+    border-radius: 999px !important; /* 全部变药丸 */
+    padding: 10px 20px !important;
+    font-weight: 800 !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    background: var(--km-card) !important;
+    color: var(--km-text-main) !important;
+    transform: none !important;
+}
+/* 主按钮加色 */
+body.ui-kawaii .btn-save,
+body.ui-kawaii .fc-btn,
+body.ui-kawaii .modal-actions button:last-child {
+    background: var(--km-primary) !important;
+    color: var(--km-primary-text) !important;
+}
+
+/* 3. 时光档案、设置、字卡模块的顶栏与卡片 */
+/* 顶栏 */
+body.ui-kawaii .st-header,
+body.ui-kawaii .fc-header {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    border-radius: 0 0 32px 32px !important;
+    margin-bottom: 12px !important;
+    padding-bottom: 20px !important;
+}
+/* 返回按钮 */
+body.ui-kawaii .st-back,
+body.ui-kawaii .fc-back {
+    border: none !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-main) !important;
+    border-radius: 999px !important;
+    padding: 8px 16px !important;
+}
+
+/* 档案与设置里的大白盒子 */
+body.ui-kawaii .st-box,
+body.ui-kawaii .fc-box {
+    background: var(--km-card) !important;
+    border: none !important;
+    border-radius: 28px !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 20px !important;
+}
+body.ui-kawaii .st-box::after,
+body.ui-kawaii .fc-box::after { display: none !important; } /* 干掉盒子里面的内框线 */
+body.ui-kawaii .st-title { border-bottom: none !important; color: var(--km-text-sub) !important; font-size: 13px !important; }
+
+/* 档案卡片内部条目 (纪念日、收藏) */
+body.ui-kawaii .anni-item {
+    border-bottom: none !important;
+    background: #f8fafc !important;
+    border-radius: 16px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 10px !important;
+}
+body.ui-kawaii .fav-item {
+    border: none !important;
+    background: var(--km-card) !important;
+    border-radius: 24px !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+body.ui-kawaii .fav-time { border-bottom: none !important; color: var(--km-text-sub) !important; }
+/* 批量收藏的斜边标签复原为内部小药丸 */
+body.ui-kawaii .fav-batch-title {
+    background: var(--km-accent) !important;
+    color: #0369a1 !important;
+    border: none !important;
+    border-radius: 999px !important;
+    transform: none !important;
+    padding: 6px 12px !important;
+}
+body.ui-kawaii .fav-batch-box { border-left: 4px solid var(--km-primary) !important; }
+body.ui-kawaii .fav-batch-content { border: none !important; background: #f8fafc !important; border-radius: 12px !important; padding: 8px 12px !important; }
+
+/* 4. 设置面板特供：开关和滑条顺滑改造 */
+body.ui-kawaii .st-switch {
+    border: none !important;
+    background: #e2e8f0 !important; /* 关闭状态的灰 */
+    border-radius: 999px !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05) !important;
+    width: 44px !important; height: 24px !important;
+}
+body.ui-kawaii .st-switch:checked { background: var(--km-primary) !important; }
+body.ui-kawaii .st-switch::after {
+    background: #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+    width: 20px !important; height: 20px !important;
+    top: 2px !important; left: 2px !important;
+}
+body.ui-kawaii .st-switch:checked::after { left: 22px !important; }
+
+body.ui-kawaii .st-range::-webkit-slider-runnable-track {
+    border: none !important;
+    background: #e2e8f0 !important;
+    border-radius: 999px !important;
+}
+body.ui-kawaii .st-range::-webkit-slider-thumb {
+    border: none !important;
+    background: #fff !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+    width: 20px !important; height: 20px !important;
+    margin-top: -6px !important;
+}
+
+/* 5. 电话悬浮窗 (无死角圆润版) */
+/* 大悬浮窗 */
+body.ui-kawaii #call-floating-window {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border: none !important;
+    border-radius: 40px !important; /* 巨型圆角 */
+    box-shadow: var(--km-shadow-lg) !important;
+    padding: 30px 20px !important;
+}
+body.ui-kawaii #call-floating-window::before { display: none !important; } /* 干掉标题胶带 */
+body.ui-kawaii .call-shrink-btn {
+    top: 15px !important; right: 15px !important;
+    border: none !important;
+    background: #f1f5f9 !important;
+    border-radius: 50% !important;
+    width: 32px !important; height: 32px !important;
+    display: flex !important; justify-content: center !important; align-items: center !important;
+    transform: none !important; box-shadow: none !important;
+}
+body.ui-kawaii .call-avatar { border: none !important; box-shadow: var(--km-shadow-md) !important; }
+body.ui-kawaii .call-btn { border: none !important; box-shadow: var(--km-shadow-sm) !important; width: 56px !important; height: 56px !important; }
+body.ui-kawaii .call-btn.accept { background: #dcfce7 !important; color: #166534 !important; } /* 柔和青草绿 */
+body.ui-kawaii .call-btn.reject { background: #ffe4e6 !important; color: #e11d48 !important; } /* 柔和树莓红 */
+
+/* 迷你通话胶囊 */
+body.ui-kawaii #call-mini-window {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: none !important;
+    border-radius: 999px !important;
+    box-shadow: var(--km-shadow-md) !important;
+    transform: none !important; /* 取消倾斜 */
+    padding: 6px 12px !important;
+}
+body.ui-kawaii .mini-tape { display: none !important; }
+body.ui-kawaii .mini-avatar-wrap { border: none !important; background: transparent !important; transform: none !important; padding: 0 !important; }
+body.ui-kawaii .mini-avatar { border: none !important; border-radius: 50% !important; box-shadow: var(--km-shadow-sm) !important; }
+body.ui-kawaii .mini-end-btn {
+    border: none !important;
+    border-radius: 999px !important;
+    background: #ffe4e6 !important;
+    color: #e11d48 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 贴纸库修复 & 电话MINI修复
+   ========================================================= */
+
+/* 1. 修复电话悬浮窗“MINI”按钮（把定死的正圆形改回自适应胶囊） */
+body.ui-kawaii .call-shrink-btn {
+    width: auto !important; height: auto !important;
+    border-radius: 999px !important;
+    padding: 6px 14px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* 2. 贴纸/表情包面板去边框极简化 */
+body.ui-kawaii #emoji-panel {
+    border: none !important;
+    border-radius: 32px !important;
+    box-shadow: var(--km-shadow-lg) !important;
+    background: var(--km-card) !important;
+    padding: 20px !important;
+}
+/* 贴纸库里的横线和每个表情的边框干掉 */
+body.ui-kawaii .emoji-item {
+    border: none !important;
+    border-radius: 12px !important;
+    background-color: #f8fafc !important; /* 淡灰底色 */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+body.ui-kawaii .emoji-del-btn { border: none !important; box-shadow: none !important; }
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 记账 (BILL) 模块重构
+   ========================================================= */
+
+/* 记账背景 */
+body.ui-kawaii #bill-app {
+    background-color: var(--km-bg) !important;
+    background-image: none !important;
+}
+
+/* 顶部日期栏 */
+body.ui-kawaii .bill-date-bar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    border-radius: 0 0 32px 32px !important;
+    margin-bottom: 15px !important;
+}
+body.ui-kawaii .bill-date-btn {
+    border: none !important;
+    border-radius: 999px !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-main) !important;
+    box-shadow: none !important;
+}
+
+/* 统计盒子 (去掉边框和虚线) */
+body.ui-kawaii .bill-stats-box {
+    border: none !important;
+    border-radius: 28px !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    margin: 0 15px 15px 15px !important;
+}
+body.ui-kawaii .bill-stat-item { border-right: 1px solid #f1f5f9 !important; } /* 把黑色虚线换成极淡的实线 */
+body.ui-kawaii .bill-stat-label { color: var(--km-text-sub) !important; }
+/* 统一记账红绿配色 (温柔的树莓红和薄荷绿) */
+body.ui-kawaii .bill-stat-val.out, body.ui-kawaii .bill-item-amt.out { color: #f43f5e !important; }
+body.ui-kawaii .bill-stat-val.in, body.ui-kawaii .bill-item-amt.in { color: #10b981 !important; }
+
+/* 账单单条卡片 (去虚线框) */
+body.ui-kawaii .bill-item-card {
+    border: none !important;
+    border-radius: 20px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    margin: 0 15px 10px 15px !important;
+    padding: 16px !important;
+}
+/* 收入/支出 标签小药丸 */
+body.ui-kawaii .bill-item-type {
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 4px 10px !important;
+}
+body.ui-kawaii .bill-item-type.out { background: #ffe4e6 !important; color: #e11d48 !important; }
+body.ui-kawaii .bill-item-type.in { background: #dcfce7 !important; color: #166534 !important; }
+body.ui-kawaii .bill-item-note { color: var(--km-text-main) !important; opacity: 0.8; font-weight: normal !important; }
+
+/* 新增账单按钮 (底部药丸) */
+body.ui-kawaii .bill-type-active {
+    background-color: var(--km-primary) !important;
+    color: var(--km-primary-text) !important;
+    border: none !important;
+}
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 月相/经期 (PERIOD) 模块重构
+   ========================================================= */
+
+/* 经期背景 */
+body.ui-kawaii #period-app {
+    background-color: var(--km-bg) !important;
+    background-image: none !important;
+}
+
+/* 顶部月份栏 */
+body.ui-kawaii .period-month-bar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    border-radius: 0 0 32px 32px !important;
+    margin-bottom: 15px !important;
+}
+
+/* 日历大卡片 */
+body.ui-kawaii .period-calendar {
+    border: none !important;
+    border-radius: 32px !important;
+    box-shadow: var(--km-shadow-md) !important;
+    margin: 0 15px 20px 15px !important;
+    padding: 24px 16px !important;
+}
+body.ui-kawaii .period-calendar::before { display: none !important; } /* 干掉左上角 CALENDAR 胶带 */
+body.ui-kawaii .period-weekdays { border-bottom: 1px solid #f1f5f9 !important; color: var(--km-text-sub) !important; padding-bottom: 10px !important;}
+
+/* 日历中的每一天 */
+body.ui-kawaii .p-day { border-radius: 12px !important; color: var(--km-text-main) !important; }
+
+/* 今天 (浅灰色块代替斜线) */
+body.ui-kawaii .p-day.today {
+    background: #f1f5f9 !important;
+    border: none !important;
+    color: var(--km-text-main) !important;
+}
+
+/* 姨妈期 (高级温柔珊瑚粉) */
+body.ui-kawaii .p-day.period {
+    background: #fb7185 !important; 
+    color: #fff !important; 
+    border: none !important; 
+    box-shadow: 0 4px 12px rgba(251, 113, 133, 0.3) !important;
+}
+
+/* 预测期 (淡粉色块，去虚线) */
+body.ui-kawaii .p-day.predict {
+    background: #fff1f2 !important;
+    border: none !important;
+    color: #e11d48 !important;
+}
+
+/* 底部仪表盘卡片 */
+body.ui-kawaii .period-dashboard {
+    background: var(--km-card) !important;
+    background-image: none !important;
+    border: none !important;
+    border-radius: 28px !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    margin: 0 15px !important;
+    padding: 24px !important;
+}
+body.ui-kawaii .period-tape { display: none !important; } /* 干掉顶部深红胶带 */
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 字卡、食谱、日记 全面极简化
+   ========================================================= */
+
+/* ================= 1. 字卡 (Flashcard) 模块修复 ================= */
+
+/* 去掉字卡背景的网格纸 */
+body.ui-kawaii #flashcard-app {
+    background: var(--km-bg) !important;
+    background-image: none !important;
+}
+
+/* 顶部选项卡：从生硬的方块变成悬浮小胶囊 */
+body.ui-kawaii .fc-tabs {
+    border-bottom: none !important;
+    background: transparent !important;
+    gap: 12px !important;
+    padding: 0 15px !important;
+    margin-bottom: 15px !important;
+}
+body.ui-kawaii .fc-tab {
+    border: none !important;
+    border-radius: 999px !important;
+    background: #f1f5f9 !important; /* 淡灰白底色 */
+    color: var(--km-text-sub) !important;
+    padding: 12px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+body.ui-kawaii .fc-tab.active {
+    background: var(--km-primary) !important;
+    color: var(--km-primary-text) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+
+/* 🚀 修复工具栏按钮被挤扁的问题！ */
+body.ui-kawaii .fc-toolbar {
+    flex-wrap: wrap !important; /* 允许按钮换行，防止挤扁 */
+    gap: 10px !important;
+    justify-content: flex-start !important;
+}
+/* 所有下拉框、输入框、按钮统一为无边框药丸，并且强制文字不换行 */
+body.ui-kawaii .fc-toolbar .st-select,
+body.ui-kawaii .fc-toolbar .fc-search-input,
+body.ui-kawaii .fc-toolbar .fc-btn,
+body.ui-kawaii .fc-toolbar .fc-btn-outline {
+    flex: 0 0 auto !important; /* 防止被压缩 */
+    width: auto !important; 
+    height: auto !important;
+    white-space: nowrap !important; /* 核心：禁止文字折行 */
+    border: none !important;
+    border-radius: 999px !important;
+    padding: 10px 18px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+/* 搜索框单独设置自适应撑开 */
+body.ui-kawaii .fc-toolbar .fc-search-input {
+    flex: 1 1 120px !important; 
+    background: #f1f5f9 !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+/* 下拉菜单软萌化 */
+body.ui-kawaii .st-select {
+    background: var(--km-card) !important;
+    color: var(--km-text-main) !important;
+    outline: none !important;
+}
+
+/* 文本输入区 (去掉黑框，变柔和圆角) */
+body.ui-kawaii .fc-textarea {
+    border: none !important;
+    border-radius: 20px !important;
+    background: #f8fafc !important; /* 极淡灰 */
+    padding: 16px !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.03) !important;
+    font-weight: normal !important;
+}
+
+/* 底部列表项卡片 */
+body.ui-kawaii .fc-item {
+    border: none !important;
+    border-radius: 20px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    margin-bottom: 12px !important;
+    padding: 16px !important;
+}
+body.ui-kawaii .fc-item-input {
+    border: none !important;
+    background: #f1f5f9 !important;
+    border-radius: 12px !important;
+    padding: 8px 12px !important;
+}
+/* 复选框改造：去掉黑边方块，变柔和的圆角方块 */
+body.ui-kawaii .fc-checkbox-label input[type="checkbox"],
+body.ui-kawaii .fc-item input[type="checkbox"] {
+    border: 2px solid #cbd5e1 !important; /* 淡淡的蓝灰边 */
+    border-radius: 6px !important; /* 柔和的小圆角 */
+    background: #ffffff !important;
+    width: 22px !important; height: 22px !important;
+}
+body.ui-kawaii .fc-checkbox-label input[type="checkbox"]:checked,
+body.ui-kawaii .fc-item input[type="checkbox"]:checked {
+    background: var(--km-primary) !important; /* 芋泥紫 */
+    border-color: var(--km-primary) !important;
+}
+body.ui-kawaii .fc-checkbox-label input[type="checkbox"]:checked::after,
+body.ui-kawaii .fc-item input[type="checkbox"]:checked::after {
+    border-color: var(--km-primary-text) !important; /* 打钩符号变成深紫 */
+    left: 7px !important; top: 3px !important;
+    width: 5px !important; height: 10px !important;
+}
+
+
+/* ================= 2. 食谱 (Recipe) 模块修复 ================= */
+
+body.ui-kawaii #recipe-app {
+    background: var(--km-bg) !important;
+    background-image: none !important;
+}
+
+/* 顶部日期栏 */
+body.ui-kawaii .recipe-date-bar {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    border-radius: 0 0 32px 32px !important;
+    margin-bottom: 15px !important;
+}
+body.ui-kawaii .recipe-date-btn {
+    border: none !important;
+    border-radius: 999px !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-main) !important;
+    box-shadow: none !important;
+}
+
+/* 每餐大卡片 */
+body.ui-kawaii .recipe-meal-card {
+    border: none !important;
+    border-radius: 28px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    margin: 0 15px 15px 15px !important;
+    padding: 24px 20px !important;
+}
+/* 把外挂的斜向胶带 "MEAL" 改为内部左上角的淡奶油色药丸 */
+body.ui-kawaii .recipe-meal-card::before {
+    position: relative !important;
+    top: 0 !important; left: 0 !important;
+    transform: none !important;
+    display: inline-block !important;
+    border: none !important;
+    border-radius: 999px !important;
+    background: #ffedd5 !important; /* 淡橘 */
+    color: #c2410c !important; /* 深橘 */
+    padding: 6px 14px !important;
+    margin-bottom: 16px !important;
+    font-size: 11px !important;
+    content: '餐点记录' !important;
+}
+body.ui-kawaii .recipe-meal-time { border-bottom: none !important; color: var(--km-text-sub) !important; font-size: 11px !important;}
+body.ui-kawaii .recipe-meal-food { color: var(--km-text-main) !important; font-size: 16px !important; font-weight: 900 !important;}
+/* 评论卡片去边框 */
+body.ui-kawaii .recipe-comment-box {
+    border: none !important;
+    border-radius: 16px !important;
+    background: #f8fafc !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+    color: var(--km-text-main) !important;
+    padding: 12px 16px !important;
+}
+
+
+/* ================= 3. 日记 (Diary) 模块修复 ================= */
+
+body.ui-kawaii #diary-app {
+    background: var(--km-bg) !important;
+    background-image: none !important;
+}
+
+/* 日记本封面卡片 */
+body.ui-kawaii .diary-book-card {
+    border: none !important;
+    border-radius: 32px !important;
+    background: var(--km-card) !important;
+    background-image: none !important; /* 干掉波点 */
+    box-shadow: var(--km-shadow-md) !important;
+    margin: 15px !important;
+    padding: 24px !important;
+}
+/* 封面上的斜向胶带变薄荷绿药丸 */
+body.ui-kawaii .diary-book-card::before {
+    position: relative !important;
+    top: 0 !important; left: 0 !important;
+    transform: none !important;
+    display: inline-block !important;
+    border: none !important;
+    border-radius: 999px !important;
+    background: #dcfce7 !important; /* 薄荷绿 */
+    color: #166534 !important; /* 墨绿 */
+    padding: 6px 14px !important;
+    margin-bottom: 12px !important;
+    font-size: 11px !important;
+    content: '私人日记' !important;
+}
+
+/* 日记内页（每一篇日记的盒子） */
+body.ui-kawaii .diary-entry-box {
+    border: none !important;
+    border-radius: 20px !important;
+    background: #ffffff !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    margin: 0 15px 15px 15px !important;
+    padding: 20px !important;
+}
+body.ui-kawaii .diary-entry-header { border-bottom: none !important; color: var(--km-text-sub) !important; margin-bottom: 12px !important; font-size: 11px !important;}
+body.ui-kawaii .diary-entry-content { color: var(--km-text-main) !important; font-weight: normal !important; line-height: 1.8 !important;}
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 塔罗、美化、悬浮窗、日记完结提示
+   ========================================================= */
+
+/* ================= 1. 日记写完的完结提示框 ================= */
+/* 拦截所有带虚线和条纹背景的完结提示卡片 */
+body.ui-kawaii .diary-finish-box,
+body.ui-kawaii div[style*="dashed"][style*="pink"] {
+    background: #fff1f2 !important; /* 极淡的粉色底 */
+    background-image: none !important; /* 彻底干掉斜线条纹底纹 */
+    border: none !important; /* 干掉粉色虚线 */
+    border-radius: 24px !important;
+    box-shadow: inset 0 2px 6px rgba(225, 29, 72, 0.05) !important; /* 极其微弱的内阴影 */
+    color: #e11d48 !important; /* 树莓红文字 */
+    padding: 24px !important;
+    margin: 15px !important;
+}
+
+/* ================= 2. 顶部悬浮通知小药丸 (Mail Alert / Toast) ================= */
+body.ui-kawaii #mail-alert-box {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(12px) !important;
+    border: none !important;
+    border-radius: 999px !important; /* 完美的药丸形 */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+    padding: 12px 24px !important;
+    top: 40px !important; /* 稍微往下挪一点，避开刘海 */
+}
+body.ui-kawaii #mail-alert-text {
+    color: var(--km-text-main) !important;
+    font-weight: 800 !important;
+    font-size: 13px !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* ================= 3. 塔罗牌 (Tarot) 模块 ================= */
+
+body.ui-kawaii #tarot-app {
+    background: var(--km-bg) !important;
+    background-image: none !important;
+}
+
+/* 顶部选项卡：变悬浮小胶囊 */
+body.ui-kawaii .tarot-tabs {
+    border-bottom: none !important;
+    background: transparent !important;
+    gap: 12px !important;
+    padding: 0 15px !important;
+    margin-bottom: 15px !important;
+}
+body.ui-kawaii .tarot-tab {
+    border: none !important;
+    border-radius: 999px !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-sub) !important;
+    padding: 12px !important;
+    transition: all 0.2s ease !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+/* 选中状态变成静谧靛蓝 */
+body.ui-kawaii .tarot-tab.active {
+    background: #e0e7ff !important; 
+    color: #4338ca !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+
+/* 塔罗大卡片 */
+body.ui-kawaii .tarot-card-display {
+    border: none !important;
+    border-radius: 32px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-md) !important;
+    padding: 24px !important;
+}
+/* 外挂胶带变为内部的靛蓝小药丸 */
+body.ui-kawaii .tarot-card-display::before {
+    position: relative !important;
+    top: 0 !important; left: 0 !important;
+    transform: none !important;
+    display: inline-block !important;
+    border: none !important;
+    border-radius: 999px !important;
+    background: #e0e7ff !important;
+    color: #4338ca !important;
+    padding: 6px 14px !important;
+    margin-bottom: 16px !important;
+    font-size: 11px !important;
+    content: '命运占卜' !important;
+}
+
+/* 历史与牌意词典 */
+body.ui-kawaii .tarot-history-item { border-bottom: 1px solid #f1f5f9 !important; padding-bottom: 12px !important;}
+body.ui-kawaii .tarot-dict-item {
+    border: none !important;
+    border-radius: 20px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    margin-bottom: 12px !important;
+    padding: 16px !important;
+}
+
+/* ================= 4. 美化商店 (Beauty Theme) 模块 ================= */
+
+body.ui-kawaii #beauty-app {
+    background: var(--km-bg) !important;
+    background-image: none !important;
+}
+
+/* 顶部选项卡：桃花粉系 */
+body.ui-kawaii .beauty-tabs {
+    border-bottom: none !important;
+    background: transparent !important;
+    gap: 12px !important;
+    padding: 0 15px !important;
+    margin-bottom: 15px !important;
+}
+body.ui-kawaii .beauty-tab {
+    border: none !important;
+    border-radius: 999px !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-sub) !important;
+    padding: 12px !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+body.ui-kawaii .beauty-tab.active {
+    background: #fce7f3 !important; 
+    color: #be185d !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+
+/* 气泡皮肤大卡片 */
+body.ui-kawaii .beauty-bubble-card {
+    border: none !important;
+    border-radius: 32px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 24px 20px !important;
+}
+/* 外挂胶带变为内部的桃粉小药丸 */
+body.ui-kawaii .beauty-bubble-card::before {
+    position: relative !important;
+    top: 0 !important; left: 0 !important;
+    transform: none !important;
+    display: inline-block !important;
+    border: none !important;
+    border-radius: 999px !important;
+    background: #fce7f3 !important;
+    color: #be185d !important;
+    padding: 6px 14px !important;
+    margin-bottom: 16px !important;
+    font-size: 11px !important;
+    content: '气泡皮肤' !important;
+}
+body.ui-kawaii .bb-title { border-bottom: none !important; color: var(--km-text-main) !important; }
+
+/* 预览盒子 (去网格) */
+body.ui-kawaii .bb-preview-box {
+    border: none !important;
+    border-radius: 20px !important;
+    background: #f8fafc !important;
+    background-image: none !important;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.02) !important;
+    padding: 16px !important;
+}
+
+/* 应用按钮 (变成圆滑药丸) */
+body.ui-kawaii .bb-btn {
+    border: none !important;
+    border-radius: 999px !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-main) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 12px !important;
+}
+body.ui-kawaii .bb-btn.applied {
+    background: var(--km-primary) !important;
+    color: var(--km-primary-text) !important;
+    box-shadow: none !important;
+}
+
+/* 顶部主题小球 (去掉硬边框，选中时变成光晕) */
+body.ui-kawaii .theme-ball {
+    border: none !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+body.ui-kawaii .theme-item.active .theme-ball {
+    border: none !important;
+    box-shadow: 0 0 0 4px #f8f9fa, 0 0 0 8px #e8defe !important; /* 芋泥紫的多层光晕代替边框 */
+    transform: scale(1.1);
+}
+body.ui-kawaii .theme-name { color: var(--km-text-sub) !important; margin-top: 4px !important;}
+body.ui-kawaii .theme-item.active .theme-name { color: var(--km-primary-text) !important; font-weight: 900 !important;}
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 终局之战：备忘、信箱全面净化！
+   ========================================================= */
+
+/* ================= 1. 备忘录 (Memo) 模块 ================= */
+
+body.ui-kawaii #memo-app {
+    background: var(--km-bg) !important;
+    background-image: none !important; /* 干掉网格线 */
+}
+
+/* 备忘录卡片：干掉倾斜、去掉直角、变成柔软的云朵盒子 */
+body.ui-kawaii .memo-note {
+    border: none !important;
+    border-radius: 28px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    transform: none !important; /* 强制取消所有倾斜 */
+    padding: 24px !important;
+    margin: 0 15px 16px 15px !important;
+    transition: all 0.2s ease !important;
+}
+body.ui-kawaii .memo-note:active { transform: scale(0.97) !important; } /* 按下时微缩 */
+
+/* 外挂的斜角胶带 -> 内部芝士黄色的小药丸 */
+body.ui-kawaii .memo-tape {
+    position: relative !important;
+    top: 0 !important; left: 0 !important;
+    transform: none !important;
+    display: inline-block !important;
+    border: none !important;
+    border-radius: 999px !important;
+    background: #fef08a !important; /* 芝士黄 */
+    color: #854d0e !important;
+    padding: 6px 14px !important;
+    margin-bottom: 12px !important;
+    font-size: 11px !important;
+    letter-spacing: 0 !important;
+}
+
+body.ui-kawaii .memo-title {
+    border-bottom: none !important;
+    color: var(--km-text-main) !important;
+    font-size: 16px !important;
+    margin-bottom: 8px !important;
+}
+body.ui-kawaii .memo-content {
+    color: var(--km-text-sub) !important;
+    font-weight: normal !important;
+}
+body.ui-kawaii .memo-meta {
+    border-top: none !important; /* 去掉虚线分割 */
+    color: #cbd5e1 !important; /* 极淡的灰 */
+    margin-top: 12px !important;
+}
+
+/* ================= 2. 信箱 (Mail) 模块 ================= */
+
+body.ui-kawaii #mail-app {
+    background: var(--km-bg) !important;
+    background-image: none !important;
+}
+
+/* 顶部选项卡：悬浮的淡蓝色药丸 */
+body.ui-kawaii .mail-tabs {
+    border-bottom: none !important;
+    background: transparent !important;
+    gap: 12px !important;
+    padding: 0 15px !important;
+    margin-bottom: 15px !important;
+}
+body.ui-kawaii .mail-tab {
+    border: none !important;
+    border-radius: 999px !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-sub) !important;
+    padding: 12px !important;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
+}
+body.ui-kawaii .mail-tab.active {
+    background: #e0f2fe !important; /* 婴儿蓝 */
+    color: #0369a1 !important; /* 深海蓝 */
+    box-shadow: var(--km-shadow-sm) !important;
+}
+
+/* 邮件列表大卡片 */
+body.ui-kawaii .mail-item-card {
+    border: none !important;
+    border-radius: 28px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 20px !important;
+    margin: 0 15px 15px 15px !important;
+}
+
+/* 未读邮件：去掉斜条纹和粉色虚线边框，变成极其柔和的婴儿蓝背景 */
+body.ui-kawaii .mail-item-card.unread {
+    background: #f0f9ff !important;
+    border: none !important;
+    box-shadow: 0 4px 16px rgba(14, 165, 233, 0.1) !important; /* 带点淡淡蓝光的阴影 */
+}
+
+/* 邮件左侧的图章：去掉双层黑框和倾斜，变成正经的高级图标底座 */
+body.ui-kawaii .mail-stamp {
+    border: none !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-sub) !important;
+    border-radius: 50% !important;
+    transform: none !important; /* 取消倾斜 */
+    opacity: 1 !important;
+}
+body.ui-kawaii .mail-item-card.unread .mail-stamp {
+    background: #bae6fd !important; /* 天蓝色底 */
+    color: #0284c7 !important;
+}
+
+body.ui-kawaii .mail-sender { color: var(--km-text-main) !important; font-size: 14px !important;}
+body.ui-kawaii .mail-preview { color: var(--km-text-sub) !important; font-weight: normal !important;}
+
+/* 读信界面（内页）信纸改造：干掉横线本，变成纯净的高级微凹白板 */
+body.ui-kawaii .mail-paper {
+    border: none !important;
+    border-radius: 24px !important;
+    background: #f8fafc !important; /* 极淡的灰白 */
+    background-image: none !important; /* 彻底干掉横线纸底纹 */
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.02) !important; /* 微弱的内凹感，像刻在玉石上 */
+    padding: 24px !important;
+    color: var(--km-text-main) !important;
+    font-weight: normal !important;
+    line-height: 1.8 !important;
+}
+
+/* 读信界面的标题盖章也变干净 */
+body.ui-kawaii #mail-read-stamp {
+    border: none !important;
+    color: #0ea5e9 !important;
+    background: #e0f2fe !important;
+    transform: none !important;
+    border-radius: 999px !important; /* 变成小药丸 */
+    width: auto !important; height: auto !important;
+    padding: 4px 12px !important;
+    font-size: 10px !important;
+}
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 补充：桌面图标、小组件与纪念日卡片
+   ========================================================= */
+
+/* ================= 1. 桌面 APP 图标极简化 ================= */
+body.ui-kawaii .icon-img {
+    border: none !important;
+    border-radius: 20px !important; /* 变成圆润的果冻块 */
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+body.ui-kawaii .icon-img:active {
+    transform: scale(0.92) !important;
+    box-shadow: none !important;
+}
+body.ui-kawaii .icon-img::after { 
+    display: none !important; /* 彻底干掉图标内部的虚线圈 */
+}
+body.ui-kawaii .icon-img svg {
+    stroke: var(--km-primary-text) !important; /* 图标线条使用芋泥深紫色 */
+    stroke-width: 2px !important;
+}
+body.ui-kawaii .icon-label {
+    color: var(--km-text-sub) !important; /* 文字颜色变浅灰，弱化存在感 */
+    font-weight: 800 !important;
+    border: none !important;
+    background: transparent !important;
+    margin-top: 2px !important;
+}
+
+/* ================= 2. 桌面小组件彻底去边框、去虚线 ================= */
+body.ui-kawaii .widget {
+    border: none !important;
+    border-radius: 28px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+}
+body.ui-kawaii .widget-inner-border { 
+    display: none !important; /* 干掉所有小组件内部的虚线边框 */
+}
+
+/* ================= 3. 纪念日卡片 (截图部分) 极简重构 ================= */
+
+/* 去掉纪念日独立 APP 背景的波点网格 */
+body.ui-kawaii #anni-global-app {
+    background-color: var(--km-bg) !important;
+    background-image: none !important; 
+}
+
+/* 纪念日大卡片改造 */
+body.ui-kawaii .anni-g-card {
+    border: none !important;
+    border-radius: 28px !important; /* 巨型软萌圆角 */
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 24px !important;
+    margin: 15px !important;
+}
+
+/* 左上角外挂的硬胶带，变成卡片内部的粉色小药丸标签 */
+body.ui-kawaii .anni-g-card::before {
+    position: relative !important;
+    top: 0 !important; left: 0 !important;
+    transform: none !important;
+    display: inline-block !important;
+    border: none !important;
+    border-radius: 999px !important;
+    background: #fce7f3 !important; /* 蜜桃淡粉 */
+    color: #be185d !important;      /* 树莓深红 */
+    padding: 6px 14px !important;
+    margin-bottom: 16px !important;
+    font-size: 11px !important;
+    content: '纪念日记录' !important;
+}
+
+/* 卡片内部的横线和文字柔和化 */
+body.ui-kawaii .anni-item { 
+    border-bottom: none !important; /* 干掉项目之间的虚线 */
+}
+body.ui-kawaii .anni-name { 
+    color: var(--km-text-main) !important; 
+    font-size: 18px !important; 
+    font-weight: 900 !important;
+}
+body.ui-kawaii .anni-date { 
+    color: var(--km-text-sub) !important; 
+    font-size: 12px !important;
+    margin-top: 4px !important;
+    font-family: inherit !important; /* 去掉代码字体 */
+}
+body.ui-kawaii .anni-days { 
+    color: #f43f5e !important; /* 数字使用醒目的玫瑰红 */
+    font-size: 32px !important; 
+}
+body.ui-kawaii .anni-label { 
+    color: var(--km-text-sub) !important; 
+    font-weight: 600 !important;
+}
+/* 针对截图里那条可能存在的灰黑分割线强制隐藏或变淡 */
+body.ui-kawaii .anni-g-card hr, 
+body.ui-kawaii .anni-g-card [style*="border"] {
+    border-color: #f1f5f9 !important; /* 极淡的白灰色，几乎看不见 */
+    border-style: solid !important;
+}
+
+/* =========================================================
+   ☁️ KAWAII MINIMAL - 桌面小组件彻底去线框与柔和化
+   ========================================================= */
+
+/* 隐藏所有的外挂胶带、图钉、内圈虚线 */
+body.ui-kawaii .washi-tape,
+body.ui-kawaii .widget-inner-border,
+body.ui-kawaii .square-clip,
+body.ui-kawaii .avatar-halo {
+    display: none !important;
+}
+
+/* 1. 顶部综合档案小组件 (.widget-integrated) */
+body.ui-kawaii .widget-integrated {
+    border: none !important;
+    border-radius: 32px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 24px !important;
+}
+body.ui-kawaii .int-avatar { border: none !important; border-radius: 50% !important; box-shadow: var(--km-shadow-sm) !important; }
+body.ui-kawaii .int-name { border: none !important; background: transparent !important; color: var(--km-text-main) !important; font-size: 18px !important; padding: 0 !important; }
+body.ui-kawaii .int-sign { border: none !important; color: var(--km-text-sub) !important; }
+/* 干掉中间那个带 LOVE 的虚线分割线，变成极简留白 */
+body.ui-kawaii .int-divider { background: none !important; border-top: 1px solid #f1f5f9 !important; height: 0 !important; margin: 10px 0 !important; }
+body.ui-kawaii .int-divider::after { display: none !important; }
+/* 音乐播放器部分去框 */
+body.ui-kawaii .int-music-cover { border: none !important; border-radius: 50% !important; box-shadow: var(--km-shadow-sm) !important; }
+body.ui-kawaii .int-music-progress { border: none !important; background: #f1f5f9 !important; border-radius: 999px !important; height: 6px !important; }
+body.ui-kawaii .int-music-progress::after { border-radius: 999px !important; background: var(--km-primary-text) !important; }
+body.ui-kawaii .int-music-controls { border: none !important; color: var(--km-text-sub) !important; font-weight: 800 !important; }
+
+/* 2. 验证码/左侧卡片 (.widget-captcha) */
+body.ui-kawaii .widget-captcha {
+    border: none !important;
+    border-radius: 28px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 16px !important;
+}
+/* 解决图中划重点的右侧竖向虚线！ */
+body.ui-kawaii .widget-captcha::after { display: none !important; }
+body.ui-kawaii .captcha-header { border: none !important; color: var(--km-text-sub) !important; font-size: 12px !important; }
+body.ui-kawaii .captcha-img { border: none !important; border-radius: 16px !important; background-color: #f8fafc !important; }
+/* 干掉底部条形码 */
+body.ui-kawaii .captcha-barcode { display: none !important; }
+
+/* 3. 拍立得/右侧相框 (.widget-square) */
+body.ui-kawaii .widget-square {
+    border: none !important;
+    border-radius: 28px !important;
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 16px !important;
+    transform: none !important; /* 取消倾斜，看起来更规整极简 */
+}
+body.ui-kawaii .widget-square::before { display: none !important; }
+body.ui-kawaii .square-img { border: none !important; border-radius: 16px !important; background-color: #f8fafc !important; }
+body.ui-kawaii .square-sign { color: var(--km-text-sub) !important; font-style: italic !important; bottom: 12px !important; right: 16px !important;}
+
+/* 4. 底部搜索框 (.widget-search) */
+body.ui-kawaii .widget-search {
+    border: none !important;
+    border-radius: 999px !important; /* 变成大号圆润胶囊 */
+    background: var(--km-card) !important;
+    box-shadow: var(--km-shadow-sm) !important;
+    padding: 14px 20px !important;
+    color: var(--km-text-sub) !important;
+}
+body.ui-kawaii .search-btn {
+    border: none !important;
+    background: #f1f5f9 !important;
+    color: var(--km-text-main) !important;
+    border-radius: 999px !important;
+    padding: 6px 16px !important;
+    font-weight: 800 !important;
+}
+
 /* ================= 美化模块 CSS END ================= */
 </style>
 
@@ -10335,7 +11975,7 @@ function showNotification(msg) {
     const notif = document.createElement('div');
     notif.className = 'notification'; // 👈 新增这一句给它加上名字！
     notif.innerText = msg;
-    notif.style.cssText = 'position:absolute; top:40px; left:50%; transform:translateX(-50%); background:#fff; color:var(--theme-main) ; padding:8px 16px; z-index:1000; font-size:12px; font-weight:bold; border-radius:0; pointer-events:none; border: 1px solid var(--theme-main) ; box-shadow: 0 4px 10px rgba(0,0,0,0.05); white-space: nowrap; max-width: 90%;';
+    
     document.getElementById('phone').appendChild(notif);
     setTimeout(() => notif.remove(), 2000);
 }
@@ -10851,7 +12491,7 @@ async importFromFile(input) {
                 // 如果是聊天字卡，前方加个组名小标签；如果是状态，就纯净显示
                 let groupTag = '';
                 if (this.currentCategory === 'chat') {
-                    groupTag = `<span style="font-size:9px; border:1px solid #aaa; padding:0 3px; border-radius:2px; margin-right:6px; color:#888; font-weight:normal;">${item.group || '未分组'}</span>`;
+                    groupTag = `<span class="fc-group-tag">${item.group || '未分组'}</span>`;
                 }
                 textSpan.innerHTML = groupTag + item.text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 textSpan.onclick = () => this.editItem(item.id);
@@ -11270,7 +12910,7 @@ const msgApp = {
         const container = document.getElementById('role-list-container');
         container.innerHTML = '';
         if(this.roles.length === 0) {
-            container.innerHTML = '<div style="text-align:center; font-size:12px; font-weight:bold; margin-top:20px;">[暂无角色，点击右上角添加]</div>';
+            container.innerHTML = '<div class="empty-hint-text">[暂无角色，点击右上角添加]</div>';
             return;
         }
         this.roles.forEach(role => {
@@ -11836,7 +13476,7 @@ if (msg.type === 'signal' || msg.type === 'signal_ans') {
 
     el.innerHTML = `
         ${multiCheckHTML}
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: ${msg.isMe ? 'flex-end' : 'flex-start'};">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-avatar" ${avatarStyle}></div>
@@ -11865,7 +13505,7 @@ if (msg.type === 'decision_ask') {
     }
     el.innerHTML = `
         ${multiCheckHTML}
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-end;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="decision-ask-box">
@@ -11894,7 +13534,7 @@ if (msg.type === 'decision_ans') {
     }
     el.innerHTML = `
         ${multiCheckHTML}
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-start;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-avatar" ${avatarStyle}></div>
@@ -11917,7 +13557,7 @@ if (msg.type === 'tacit_ask') {
     let timeHTML = settingsApp.config.showTimestamp ? `<div class="msg-time">${msg.time}</div>` : '';
     let optsHTML = msg.options.map(o => `<div class="tacit-opt">${o}</div>`).join('');
     el.innerHTML = `
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-end;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="tacit-ask-box">
@@ -11953,7 +13593,7 @@ if (msg.type === 'tacit_ans') {
         : `<div class="tacit-stamp fail">MISS<br>笨笨</div>`;
 
     el.innerHTML = `
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-start;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-avatar" ${avatarStyle}></div>
@@ -11983,13 +13623,13 @@ if (msg.type === 'thought') {
     let timeHTML = settingsApp.config.showTimestamp ? `<div class="msg-time">${msg.time}</div>` : '';
 
     el.innerHTML = `
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-start;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-avatar" ${avatarStyle}></div>
                 
                 <!-- 极繁风脑电波卡片外壳 -->
-                <div class="thought-msg-box" style="background: #fff; border: 2px solid var(--theme-main) ; padding: 14px 12px 10px 12px; border-radius: 2px; position: relative; box-shadow: 4px 4px 0 rgba(43,43,43,0.05); margin-top: 4px; background-image: radial-gradient(#eaeaea 1px, transparent 1px); background-size: 10px 10px; min-width: 170px;">
+                <div class="thought-msg-box">
                     
                     <!-- 左上角撕裂感胶带 -->
                     <div class="thought-tag" style="position: absolute; top: -8px; left: -5px; background: var(--theme-main) ; color: #fff; font-size: 8px; font-weight: 900; padding: 2px 6px; transform: rotate(-3deg); border: 1px dashed #fff; letter-spacing: 1px; z-index: 5;">SUDDEN THOUGHT</div>
@@ -12051,7 +13691,7 @@ if (msg.type === 'red_packet') {
 
     el.innerHTML = `
         ${multiCheckHTML}
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: ${msg.isMe ? 'flex-end' : 'flex-start'};">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-avatar" ${avatarStyle}></div>
@@ -12092,7 +13732,7 @@ if (msg.type === 'recipe') {
 
     el.innerHTML = `
         ${multiCheckHTML}
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-end;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-recipe-box">
@@ -12120,7 +13760,7 @@ if (msg.type === 'anniversary') {
     
     el.innerHTML = `
         ${multiCheckHTML}
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-end;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-anni-share">
@@ -12148,7 +13788,7 @@ if (msg.type === 'memo_alert') {
     let titleHtml = msg.title ? `<div style="font-size:11px; font-weight:900; color:var(--theme-main) ; border-bottom:2px dashed var(--theme-main) ; padding-bottom:6px; margin-bottom:8px;">${msg.title}</div>` : '';
 
     el.innerHTML = `
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-start;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-avatar" ${avatarStyle}></div>
@@ -12174,7 +13814,7 @@ if (msg.type === 'diary_invite') {
     let timeHTML = settingsApp.config.showTimestamp ? `<div class="msg-time">${msg.time}</div>` : '';
     
     el.innerHTML = `
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: flex-end;">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-diary-invite">
@@ -12218,7 +13858,7 @@ if (msg.type === 'tarot') {
 
     el.innerHTML = `
         ${multiCheckHTML}
-        <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: ${msg.isMe ? 'flex-end' : 'flex-start'};">
+        <div class="msg-inner-container">
             ${timeHTML}
             <div class="msg-content-wrap">
                 <div class="msg-avatar" ${avatarStyle}></div>
@@ -12287,7 +13927,7 @@ if (msg.type === 'tarot') {
         // 嵌套一层 inner-container 不破坏原有极繁布局
         el.innerHTML = `
             ${multiCheckHTML}
-            <div class="msg-inner-container" style="display: flex; flex-direction: column; width: 100%; align-items: ${msg.isMe ? 'flex-end' : 'flex-start'};">
+            <div class="msg-inner-container">
                 ${timeHTML}
                 <div class="msg-content-wrap">
                     <div class="msg-avatar" ${avatarStyle}></div>
@@ -13832,9 +15472,9 @@ const tacitApp = {
         row.className = 'tacit-opt-row';
         row.style.cssText = 'display:flex; align-items:center; gap:8px;';
         row.innerHTML = `
-            <input type="radio" name="tacit_correct" value="${this.optCount}" style="width:16px; height:16px; cursor:pointer; flex-shrink:0; accent-color:var(--theme-main) ;" ${isCorrect ? 'checked' : ''}>
-            <input type="text" class="tacit-opt-input" style="flex:1; height:30px; border:1px solid var(--theme-main) ; background:var(--bg-card); font-size:11px; padding:0 8px; font-weight:bold; outline:none; color:var(--theme-main) ;" placeholder="输入选项内容..." value="${defaultText}">
-            <div style="cursor:pointer; color:var(--theme-accent); font-weight:900; padding:0 4px; font-size:14px; flex-shrink:0;" onclick="if(document.querySelectorAll('.tacit-opt-row').length > 2) this.parentElement.remove(); else showNotification('至少需要保留两个选项喔~')">⨯</div>
+            <input type="radio" class="tacit-radio" name="tacit_correct" value="${this.optCount}" ${isCorrect ? 'checked' : ''}>
+            <input type="text" class="tacit-opt-input" placeholder="输入选项内容..." value="${defaultText}">
+            <div class="tacit-opt-del" onclick="if(document.querySelectorAll('.tacit-opt-row').length > 2) this.parentElement.remove(); else showNotification('至少需要保留两个选项喔~')">⨯</div>
         `;
         container.appendChild(row);
     },
@@ -14061,7 +15701,7 @@ const recipeApp = {
     renderList() {
         const container = document.getElementById('recipe-list-container');
         if (this.dailyData.length === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#888; font-size:11px; padding: 40px 0; font-weight:bold;">肚子空空...快来记录今天吃了什么吧 ♡</div>`;
+            container.innerHTML = `<div class="empty-hint-text">肚子空空...快来记录今天吃了什么吧 ♡</div>`;
         } else {
             let totalCost = 0;
             container.innerHTML = this.dailyData.map(m => {
@@ -14303,7 +15943,7 @@ const billApp = {
         const dailyItems = this.allData.filter(item => item.date === this.currentDateStr);
         
         if (dailyItems.length === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#888; font-size:11px; padding: 40px 0; font-weight:bold;">今天还没有消费记录喔... ♡</div>`;
+            container.innerHTML = `<div class="empty-hint-text">今天还没有消费记录喔... ♡</div>`;
         } else {
             container.innerHTML = dailyItems.map(item => `
                 <div class="bill-item-card">
@@ -14852,7 +16492,7 @@ const diaryApp = {
 
     renderList() {
         const container = document.getElementById('diary-list-container');
-        if (this.books.length === 0) { container.innerHTML = '<div style="text-align:center; color:#888; padding:40px 0; font-size:11px; font-weight:bold;">还没有日记本，点击右上角新建吧 ♡</div>'; return; }
+        if (this.books.length === 0) { container.innerHTML = '<div class="empty-hint-text">还没有日记本，点击右上角新建吧 ♡</div>'; return; }
         
         container.innerHTML = this.books.map(b => {
             let statusText = '';
@@ -14938,21 +16578,21 @@ const diaryApp = {
             </div>
         `).join('');
         
-        if (book.entries.length === 0) htmlStr = '<div style="text-align:center; color:#888; padding:40px 0; font-size:11px; font-weight:bold;">第一页还是空白的，来写点什么吧 ✎</div>';
+        if (book.entries.length === 0) htmlStr = '<div class="empty-hint-text">第一页还是空白的，来写点什么吧 ✎</div>';
 
         // 渲染底部的状态和催更按钮 (如果是交换日记)
 if (book.type === 'exchange') {
     if (book.entries.length >= book.totalDays * 2) {
         htmlStr += `
-        <div style="text-align:center; padding:20px 15px; background:repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,51,102,0.05) 10px, rgba(255,51,102,0.05) 20px); border:2px dashed var(--theme-accent); margin-top:20px; font-size:13px; font-weight:900; color:var(--theme-accent); border-radius: 4px;">
+        <div class="diary-finished-box">
             ✧ 本册交换日记已圆满写完 ✧<br>
             <span style="font-size:10px; color:#888; font-weight:bold; margin-top:6px; display:block;">感谢这一路的陪伴，把它好好收藏进时光里吧。</span>
         </div>`;
     } else if (book.currentTurn === 'me') {
-        htmlStr += `<div style="text-align:center; padding:15px; background:var(--bg-card); border:1px dashed #5a947a; margin-top:20px; font-size:12px; font-weight:bold; color:#5a947a;">现在日记本在你手里，该你写啦 ✎</div>`;
+        htmlStr += `<div class="diary-action-box turn-me">现在日记本在你手里，该你写啦 ✎</div>`;
     } else if (book.currentTurn === 'char') {
         htmlStr += `
-        <div style="text-align:center; padding:15px; background:var(--bg-card); border:1px dashed var(--theme-accent); margin-top:20px; font-size:12px; font-weight:bold; color:#555;">
+        <div class="diary-action-box turn-ta">
             日记本在 ${book.roleName} 手里，TA 正在构思中...<br>
             <button class="st-btn" style="margin-top:10px; border-color:var(--theme-accent); color:var(--theme-accent);" onclick="diaryApp.urgeTaDiary(${book.id})">戳一下催更</button>
         </div>`;
@@ -15422,7 +17062,7 @@ async checkArrivedMails() {
         displayList.sort((a, b) => b.sendTime - a.sendTime);
 
         if (displayList.length === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#888; font-size:11px; padding: 40px 0; font-weight:bold;">空空如也，连风都没有留下痕迹...</div>`;
+            container.innerHTML = `<div class="empty-hint-text">空空如也，连风都没有留下痕迹...</div>`;
             return;
         }
 
@@ -15551,7 +17191,7 @@ const memoApp = {
     renderList() {
         const container = document.getElementById('memo-list-container');
         if (this.memos.length === 0) {
-            container.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; color:#888; font-size:11px; padding: 40px 0; font-weight:bold;">板子上空空的，什么都没贴</div>`;
+            container.innerHTML = `<div class="empty-hint-text">板子上空空的，什么都没贴</div>`;
             return;
         }
 
@@ -16248,6 +17888,37 @@ document.addEventListener('DOMContentLoaded', () => {
         // 必须用 touchstart！手指触碰屏幕的第 0 毫秒就立刻发出去！
         btnSend.addEventListener('touchstart', handleSend, { passive: false });
         btnSend.addEventListener('mousedown', handleSend);
+    }
+});
+
+/* ================= 极致丝滑补丁：App级输入法沉浸贴边 ================= */
+document.addEventListener('DOMContentLoaded', () => {
+    const chatInput = document.getElementById('chat-input-box');
+    const chatContainer = document.getElementById('chat-msg-container');
+    
+    if (chatInput && chatContainer) {
+        // 核心1：使用现代浏览器的 visualViewport 监听物理视口的真实变化（极速响应键盘弹出）
+        const viewport = window.visualViewport || window;
+        viewport.addEventListener('resize', () => {
+            // 只要输入框在打字，强制瞬间吸底，绝不允许有一丝缝隙
+            if (document.activeElement === chatInput) {
+                chatContainer.style.scrollBehavior = 'auto'; // 关闭过渡动画，防止和系统键盘动画打架
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        });
+
+        // 核心2：点击输入框瞬间的“双重保险”补偿
+        chatInput.addEventListener('focus', () => {
+            // 键盘刚起步时吸附一次
+            setTimeout(() => {
+                chatContainer.style.scrollBehavior = 'auto';
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 100); 
+            // 键盘完全展开后再锁定一次
+            setTimeout(() => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, 300);
+        });
     }
 });
 </script>
