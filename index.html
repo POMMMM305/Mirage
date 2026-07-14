@@ -12061,8 +12061,48 @@ body.ui-goth .modal-content button:active {
 }
 
 
+/* ================= 极致丝滑的 App 弹窗动画 ================= */
+
+/* 1. 打开动画：带有一点点果冻回弹的高级展开感 */
+@keyframes modernAppOpen {
+    0% {
+        opacity: 0;
+        transform: translateY(35px) scale(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 2. 关闭动画：干脆利落的失焦下沉感 */
+@keyframes modernAppClose {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.97);
+    }
+}
+
+/* 强行接管旧动画标签 */
+.app-open-anim {
+    /* 0.35秒的顺滑贝塞尔曲线：开头极快，结尾慢速拉直 */
+    animation: modernAppOpen 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+    transform-origin: center bottom; /* 从底部展开更稳 */
+}
+
+.app-close-anim {
+    /* 0.2秒快速关闭，完美配合 JS 里 200ms 的隐藏时间 */
+    animation: modernAppClose 0.2s cubic-bezier(0.32, 0, 0.67, 0) forwards !important;
+    transform-origin: center bottom;
+}
 
 /* ================= 美化模块 CSS END ================= */
+
+
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -14875,14 +14915,16 @@ async open(role) {
 
     const appEl = document.getElementById('chat-room-app');
     
-    // 【第 1 步：隐身准备】先让外壳具备高度，但保持 100% 透明（你看不见）
-    appEl.style.display = 'flex';
+    // 【防闪烁绝杀 1：斩断前世残影】彻底清除上一次退出的动画标签，不给 Edge 闪烁的机会！
+    appEl.classList.remove('app-close-anim', 'app-open-anim');
+    
+    // 穿上隐身衣，并拉起界面
     if (enableAppAnimation) { 
         appEl.style.opacity = '0'; 
-        appEl.style.transform = 'translateY(10px)'; 
     }
+    appEl.style.display = 'flex';
 
-    // 【第 2 步：CSS 性能魔法】
+    // CSS 性能魔法
     let avatarStyleBlock = document.getElementById('dynamic-avatar-style');
     if (!avatarStyleBlock) {
         avatarStyleBlock = document.createElement('style');
@@ -14894,20 +14936,19 @@ async open(role) {
         .chat-msg.right .msg-avatar { background-image: url('${this.currentSettings?.myAvatar || ''}') !important; }
     `;
 
-    // 【关键修复：提前画气泡！】
-    // 在聊天室还是隐身状态时，直接把气泡画好并滚到底部！
-    // 因为拔掉了 Base64 头像，现在瞬间就能画完，不会卡顿！
+    // 瞬间排版气泡
     this.render();
 
-    // 【第 3 步：瞬间滑出】等浏览器花 20 毫秒把气泡彻彻底底排好版，再带着稳稳当当的气泡一起滑出屏幕！
-    setTimeout(() => {
-        if (enableAppAnimation) {
-            appEl.style.opacity = '1'; // 取消隐身
-            appEl.style.transform = 'none';
-            appEl.classList.remove('app-close-anim'); 
-            appEl.classList.add('app-open-anim'); 
-        }
-    }, 20);
+    // 【防闪烁绝杀 2：降维打击 Edge 的帧队列】
+    // 强迫 Edge 浏览器彻底消化掉透明状态，在“下一帧”再去拉起滑出动画
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            if (enableAppAnimation) {
+                appEl.style.opacity = ''; // 脱掉手工隐身衣
+                appEl.classList.add('app-open-anim'); // 让原生的 CSS 完美接管滑出
+            }
+        }, 15); // 给 15ms 的缓冲时间，刚刚好
+    });
 },
 close() {
     const appEl = document.getElementById('chat-room-app');
