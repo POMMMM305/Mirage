@@ -12646,15 +12646,7 @@ if ('serviceWorker' in navigator) {
         <!-- 极繁风重构底部 -->
         <div class="cf-new-footer">
             
-            <!-- 独立常驻的正在输入中悬浮框 (默认隐藏) -->
-            <div id="chat-typing-status" style="display:none;">
-                <div class="typing-avatar" id="typing-avatar"></div>
-                <div class="typing-text">
-                    <span class="typing-tape">TYPING ⨯</span>
-                    正在输入中 . . . ✎
-                </div>
-            </div>
-
+            
             <!-- 隐藏的文件上传组件，用于发图片 -->
             <input type="file" id="chat-send-img-input" accept="image/*" style="display:none" onchange="chatApp.sendImg(this)">
             
@@ -12691,13 +12683,14 @@ if ('serviceWorker' in navigator) {
                 </div>
 
                 <!-- 第二排：被收纳的新功能 -->
+<!-- 原本的代码 -->
 <div class="cf-tools-scatter" id="more-tools-panel" style="display: none; padding-left: 0; flex-wrap: wrap; margin-top: 5px;">
     <div class="cf-tag" onclick="thoughtApp.open()">✧ 潜意识</div>
     <div class="cf-tag" onclick="decodeApp.open()">✎ 解读</div>
     <div class="cf-tag" onclick="decisionApp.open()">⟠ 抉择</div>
     <div class="cf-tag" onclick="tacitApp.open()">♡ 默契</div>
-    <!-- 👇 新增的电波功能 -->
     <div class="cf-tag" onclick="signalApp.open()">✦ 电波</div>
+
 </div>
 
             </div>
@@ -15132,13 +15125,44 @@ async sendImg(input) {
 },
 
 setTypingState(isTyping) {
-    const el = document.getElementById('chat-typing-status');
-    if (!el) return;
+    this.isTypingState = isTyping; // 记录当前是否在输入
+    const container = document.getElementById('chat-msg-container');
+    if (!container) return;
+    
+    let el = document.getElementById('dynamic-typing-bubble');
+    
     if (isTyping && this.currentRole) {
-        el.style.display = 'flex';
-        document.getElementById('typing-avatar').style.backgroundImage = `url(${this.currentRole.avatar})`;
+        if (!el) {
+            // 如果气泡还没造出来，就当场造一个和普通气泡一模一样的
+            el = document.createElement('div');
+            el.id = 'dynamic-typing-bubble';
+            el.className = 'chat-msg left'; // 完全借用对方发消息的样式
+            el.style.alignSelf = 'flex-start';
+            el.style.maxWidth = '100%';
+            // 给它加个若隐若现的呼吸灯效果
+            el.innerHTML = `
+                <style>
+                    @keyframes typingPulse { 0% {opacity:0.5;} 50% {opacity:1;} 100% {opacity:0.5;} }
+                    #dynamic-typing-bubble .msg-bubble { animation: typingPulse 1.5s infinite; }
+                </style>
+                <div class="msg-inner-container">
+                    <div class="msg-content-wrap">
+                        <div class="msg-avatar" style="background-image:url(${this.currentRole.avatar})"></div>
+                        <div class="msg-bubble">
+                            <div class="chat-tape">TYPING ⨯</div>
+                            <span style="font-style:italic; font-weight:bold; font-size:11px; letter-spacing:1px;">正在输入中 . . . ✎</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        // 把输入中气泡塞到聊天框的最最最下面
+        container.appendChild(el);
+        // 瞬间把屏幕滚到底，让你能看到它
+        container.scrollTop = container.scrollHeight;
     } else {
-        el.style.display = 'none';
+        // 如果结束输入了，直接把这个气泡销毁
+        if (el) el.remove();
     }
 },
 
@@ -15303,7 +15327,6 @@ if (randSpecial < 0.03) {
     let drawCount = Math.random() < 0.5 ? 1 : 3;
     let npcCards = tarotApp.drawRandomCards(drawCount);
     
-    // 把抽出的塔罗牌包装成一条消息
     newMsg = { 
         id: Date.now(), isMe: false, type: 'tarot', 
         question: "宇宙的随机指引", cards: npcCards, 
@@ -15312,7 +15335,6 @@ if (randSpecial < 0.03) {
     this.messages.push(newMsg);
     this.currentRole.lastMsg = this.currentRole.name + ": [塔罗牌]";
     
-    // 梦角抽完牌，还会根据字卡池附带发一句普通的话
     let extraText = replies[i] || '这是给你的命运提示。';
     setTimeout(async () => {
         chatApp.messages.push({ id: Date.now()+1, isMe: false, text: extraText, time: chatApp.getFormattedTime(), isRead: true });
@@ -15320,8 +15342,38 @@ if (randSpecial < 0.03) {
         chatApp.render();
     }, 1000);
     
+} else if (randSpecial < 0.12) {
+    // 👉 新增：3% 概率梦角主动发送脑电波 (从你们的专属表情池里抽)
+    let pool = [...signalApp.defaultPool, ...signalApp.customPool];
+    let npcRes = '';
+    let len = Math.floor(Math.random() * 10) + 1;
+    for(let j=0; j<len; j++) {
+        npcRes += pool[Math.floor(Math.random()*pool.length)];
+    }
+    newMsg = { id: Date.now(), isMe: false, type: 'signal', text: npcRes, time: this.getFormattedTime(), isRead: true };
+    this.messages.push(newMsg);
+    this.currentRole.lastMsg = this.currentRole.name + ": [发送了脑电波]";
+    
+} else if (randSpecial < 0.15 && emojiApp.emojis && emojiApp.emojis.length > 0) {
+    // 👉 新增：3% 概率主动发表情包 (前提是表情包库里有图)
+    let randomEmoji = emojiApp.emojis[Math.floor(Math.random() * emojiApp.emojis.length)].src;
+    
+    if (Math.random() < 0.5) {
+        // 一半的概率：单纯只发一张图片
+        newMsg = { id: Date.now(), isMe: false, type: 'image', text: randomEmoji, time: this.getFormattedTime(), isRead: true };
+        this.messages.push(newMsg);
+        this.currentRole.lastMsg = this.currentRole.name + ": [表情]";
+    } else {
+        // 一半的概率：图文拼在一个气泡里！(上面文字，下面配图)
+        let combinedText = replies[i] + '<br><img src="' + randomEmoji + '" class="chat-img-msg" style="margin-top:6px;">';
+        newMsg = { id: Date.now(), isMe: false, type: 'text', text: combinedText, time: this.getFormattedTime(), isRead: true };
+        if (i === 0 && npcQuote) newMsg.quote = npcQuote;
+        this.messages.push(newMsg);
+        this.currentRole.lastMsg = this.currentRole.name + ": " + replies[i] + " [表情]";
+    }
+    
 } else {
-    // 剩下的 91% 概率，正常发送字卡里抽出来的话
+    // 剩下的 85% 概率，正常发送普通的聊天字卡
     newMsg = { id: Date.now(), isMe: false, text: replies[i], time: this.getFormattedTime() };
     if (i === 0 && npcQuote) {
         newMsg.quote = npcQuote;
@@ -15928,6 +15980,7 @@ container.appendChild(fragment);
 // --- 性能核弹：恢复刚刚拔掉的数据 ---
 if (this.currentRole) this.currentRole.avatar = tempTaAvatar;
 
+if (this.isTypingState) this.setTypingState(true);
 // 4. 滚动控制
 if (autoScroll === true) {
         // 取消延迟，直接瞬间滚到底部
