@@ -14932,6 +14932,9 @@ async open(role) {
     // 瞬间排版气泡
     this.render();
 
+this.resetProactiveTimer();
+
+
     // 【防闪烁绝杀 2：降维打击 Edge 的帧队列】
     // 强迫 Edge 浏览器彻底消化掉透明状态，在“下一帧”再去拉起滑出动画
     requestAnimationFrame(() => {
@@ -14944,6 +14947,10 @@ async open(role) {
     });
 },
 close() {
+    // 👇【关键补丁 2】：退出聊天室时，立刻停止倒计时，防止他在后台发癫引发 Bug
+    if (this.proactiveTimer) clearTimeout(this.proactiveTimer);
+    this.currentRole = null;
+
     const appEl = document.getElementById('chat-room-app');
     if (enableAppAnimation) {
         appEl.classList.remove('app-open-anim'); appEl.classList.add('app-close-anim');
@@ -19942,6 +19949,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+/* ================= 全局离线闲聊引擎 START ================= */
+setInterval(async () => {
+    // 1. 如果没开主动闲聊，或者通讯录没联系人，直接罢工
+    if (!settingsApp.config.autoMsg) return;
+    if (msgApp.roles.length === 0) return;
+    
+    // 2. 如果你正好在这个角色的聊天室里，交给聊天室自己的计时器处理，后台不插手防冲突
+    if (chatApp.currentRole && document.getElementById('chat-room-app').style.display === 'flex') return;
+
+    let mins = parseFloat(settingsApp.config.autoMsgTime) || 30;
+    if (mins < 1) mins = 1; // 兜底防止除以 0
+
+    // 3. 核心：每分钟掷一次骰子，概率 = 1 / 设定分钟数
+    // （比如设定 10 分钟，每分钟就有 1/10 的概率发消息，平均下来就是 10 分钟一条）
+    if (Math.random() < (1 / mins)) {
+        
+        // 默认挑出你最近聊过的一个角色（通讯录第一个人）
+        const targetRole = msgApp.roles[0];
+        
+        // 偷偷在后台抽取字卡
+        let pool = fcApp.data.filter(card => card.category === 'chat');
+        if (pool.length === 0) pool = [{ text: '...' }];
+        let text = pool[Math.floor(Math.random() * pool.length)].text;
+        
+        // 组装消息 (未读状态)
+        const newMsg = { id: Date.now(), isMe: false, text: text, time: chatApp.getFormattedTime(), isRead: false };
+        
+        // 提取数据库，把消息硬塞进去，然后再存起来
+        const chatRes = await DB.get('ChatData_' + targetRole.id);
+        let history = chatRes ? chatRes.list : [];
+        history.push(newMsg);
+        await DB.put({ id: 'ChatData_' + targetRole.id, list: history });
+        
+        // 更新外面通讯录列表的预览字
+        targetRole.lastMsg = targetRole.name + ": " + text;
+        await msgApp.save();
+        
+        // 如果正好停留在通讯录界面，顺便刷新一下列表
+        if (document.getElementById('msg-list-app').style.display === 'flex') {
+            msgApp.render();
+        }
+        
+        // 在屏幕顶部弹出提示框！
+        showNotification(`收到来自 ${targetRole.name} 的新消息 ✧`);
+    }
+}, 60000); // 每 1 分钟（60000毫秒）在后台扫描一次
+/* ================= 全局离线闲聊引擎 END ================= */
 </script>
 
 </body>
