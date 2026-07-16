@@ -19801,6 +19801,11 @@ loadAll = async function() {
 /* ================= 美化系统 JS END ================= */
 
 /* ================= 通知与弹窗系统 JS START ================= */
+// 👉 核心修复 1：强制在此处注册 sw.js，打通最高级别的底层推送通道！
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW注册失败', err));
+}
+
 function testAutoMsgPopup() {
     if (!("Notification" in window)) {
         showCustomConfirm("您的浏览器不支持通知功能", ()=>{});
@@ -19808,13 +19813,13 @@ function testAutoMsgPopup() {
     }
     Notification.requestPermission().then(perm => {
         if (perm === "granted") {
-            // 授权成功，直接发一条真实系统通知测试！
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(reg => {
                     reg.showNotification("测试通知", {
-                        body: "通知权限已开启！完美收到消息啦~",
+                        body: "通知权限已开启！完美弹出顶部悬浮气泡啦~",
                         icon: './icon.png',
-                        vibrate: [200, 100, 200]
+                        vibrate: [200, 100, 200],
+                        requireInteraction: true // 👉 核心修复 2：强迫安卓系统把它当成重要横幅弹出
                     });
                 });
             } else {
@@ -19827,32 +19832,30 @@ function testAutoMsgPopup() {
 }
 
 let lastNotifyTime = 0;
-// 核心：后台系统消息推送（带3.5秒防闪烁/防连震动处理）
+// 核心：后台系统消息推送
 function notifyUser(title, body) {
     if ("Notification" in window && Notification.permission === "granted") {
         if (document.hidden || !document.hasFocus()) {
             let now = Date.now();
-            // 判定距离上次弹通知是否小于 3.5 秒
             let isTooFast = (now - lastNotifyTime < 3500);
-            if (!isTooFast) lastNotifyTime = now; // 更新时间
+            if (!isTooFast) lastNotifyTime = now;
 
             let plainText = body ? body.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ') : '[图片/表情]';
             if (plainText.trim() === '') plainText = '[新消息]';
             
-            try {
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.ready.then(reg => {
-                        reg.showNotification(title, {
-                            body: plainText,
-                            icon: './icon.png',
-                            badge: './icon.png',
-                            tag: 'yume-msg', // 核心：打上相同的标签，新消息会原地覆盖旧消息
-                            renotify: !isTooFast, // 核心：如果连发太快，就不重新闪烁和震动
-                            vibrate: isTooFast ? [] : [200, 100, 200] // 太快就不震动
-                        });
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification(title, {
+                        body: plainText,
+                        icon: './icon.png',
+                        badge: './icon.png',
+                        tag: 'yume-msg', // 原地覆盖旧消息防闪烁
+                        renotify: !isTooFast, 
+                        vibrate: isTooFast ? [] : [200, 100, 200],
+                        requireInteraction: true // 👉 核心修复 3：强制高优先级横幅气泡！
                     });
-                }
-            } catch (e) {
+                });
+            } else {
                 if (!isTooFast) {
                     new Notification(title, { body: plainText, icon: './icon.png', tag: 'yume-msg' });
                 }
