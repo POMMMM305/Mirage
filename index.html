@@ -14868,17 +14868,27 @@ const chatApp = {
     currentQuote: null,
     proactiveTimer: null,
     resetProactiveTimer() {
-        if (this.proactiveTimer) clearTimeout(this.proactiveTimer);
-        if (!settingsApp.config.autoMsg || !this.currentRole) return;
-        let mins = parseFloat(settingsApp.config.autoMsgTime) || 30;
-        let baseMs = mins * 60 * 1000;
-        let fluctuate = (Math.random() - 0.5) * 0.5;
-        let finalMs = baseMs * (1 + fluctuate);
-        if (finalMs < 15000) finalMs = 15000;
-        this.proactiveTimer = setTimeout(() => {
-            this.triggerNpcReply();
-        }, finalMs);
-    },
+    if (this.proactiveTimer) clearTimeout(this.proactiveTimer);
+    // 如果没开自动发消息开关，或者还没进聊天室，就不计时
+    if (!settingsApp.config.autoMsg || !this.currentRole) return;
+    
+    let mins = parseFloat(settingsApp.config.autoMsgTime) || 30;
+    
+    // 1. 计算基础时间（毫秒）
+    let baseMs = mins * 60 * 1000;
+    
+    // 2. 加入活人感波动机制（-25% 到 +25% 之间随机跳动）
+    let fluctuate = (Math.random() - 0.5) * 0.5; 
+    let finalMs = baseMs * (1 + fluctuate);
+    
+    // 3. 兜底保护：再怎么随机短，也不能低于 15 秒（防崩溃防疯狂刷屏）
+    if (finalMs < 15000) finalMs = 15000;
+
+    this.proactiveTimer = setTimeout(() => {
+        // 时间到了，触发 TA 讲话
+        this.triggerNpcReply();
+    }, finalMs);
+},
     cancelQuote() {
         this.currentQuote = null;
         const bar = document.getElementById('quote-preview-bar');
@@ -19793,69 +19803,59 @@ loadAll = async function() {
 /* ================= 通知与弹窗系统 JS START ================= */
 function testAutoMsgPopup() {
     if (!("Notification" in window)) {
-        alert("抱歉，您的浏览器不支持后台系统通知喔");
+        showCustomConfirm("您的浏览器不支持通知功能", ()=>{});
         return;
     }
     Notification.requestPermission().then(perm => {
         if (perm === "granted") {
+            // 授权成功，直接发一条真实系统通知测试！
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistration().then(reg => {
-                    if (reg) {
-                        reg.showNotification("测试成功 ✧", {
-                            body: "通知权限已开启！退到后台也能收到TA的消息啦~",
-                            icon: './icon.png',
-                            vibrate: [300, 100, 300],
-                            requireInteraction: true, // 👈 强制系统在屏幕顶部悬浮弹窗
-                            silent: false
-                        });
-                        showNotification("已触发系统通知，请确认手机是否在顶部弹出横幅 ✧");
-                    } else {
-                        alert("提示：请使用本地服务器(如127.0.0.1)或HTTPS打开网页，否则手机拦截弹窗！");
-                    }
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification("测试通知", {
+                        body: "通知权限已开启！完美收到消息啦~",
+                        icon: './icon.png',
+                        vibrate: [200, 100, 200]
+                    });
                 });
             } else {
-                new Notification("测试成功 ✧", { body: "通知权限已开启！" });
+                new Notification("测试通知", { body: "通知权限已开启！" });
             }
         } else {
-            alert("权限被拒绝！请去手机【设置】-【应用管理】中允许您当前使用的浏览器的【通知(横幅)权限】喔");
+            showCustomConfirm("权限被拒绝，请在手机系统设置里允许浏览器的通知权限。", ()=>{});
         }
     });
 }
 
 let lastNotifyTime = 0;
-// 👈 新增：真实触发手机系统悬浮通知的引擎
+// 核心：后台系统消息推送（带3.5秒防闪烁/防连震动处理）
 function notifyUser(title, body) {
     if ("Notification" in window && Notification.permission === "granted") {
-        // 只有当页面在后台或者没聚焦时才弹系统通知
         if (document.hidden || !document.hasFocus()) {
             let now = Date.now();
+            // 判定距离上次弹通知是否小于 3.5 秒
             let isTooFast = (now - lastNotifyTime < 3500);
-            if (!isTooFast) lastNotifyTime = now; 
+            if (!isTooFast) lastNotifyTime = now; // 更新时间
 
             let plainText = body ? body.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ') : '[图片/表情]';
             if (plainText.trim() === '') plainText = '[新消息]';
             
             try {
                 if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.getRegistration().then(reg => {
-                        if (reg) {
-                            reg.showNotification(title, {
-                                body: plainText,
-                                icon: './icon.png',
-                                badge: './icon.png',
-                                tag: 'yume-msg', 
-                                renotify: !isTooFast, 
-                                vibrate: isTooFast ? [] : [300, 100, 300], 
-                                requireInteraction: true, // 👈 让TA发来的消息也能在顶部悬浮弹出！
-                                silent: false
-                            });
-                        }
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification(title, {
+                            body: plainText,
+                            icon: './icon.png',
+                            badge: './icon.png',
+                            tag: 'yume-msg', // 核心：打上相同的标签，新消息会原地覆盖旧消息
+                            renotify: !isTooFast, // 核心：如果连发太快，就不重新闪烁和震动
+                            vibrate: isTooFast ? [] : [200, 100, 200] // 太快就不震动
+                        });
                     });
-                } else {
-                    if (!isTooFast) new Notification(title, { body: plainText, icon: './icon.png', tag: 'yume-msg' });
                 }
             } catch (e) {
-                if (!isTooFast) new Notification(title, { body: plainText, icon: './icon.png', tag: 'yume-msg' });
+                if (!isTooFast) {
+                    new Notification(title, { body: plainText, icon: './icon.png', tag: 'yume-msg' });
+                }
             }
         }
     }
@@ -20053,23 +20053,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-/* ================= 全局离线闲聊引擎 START ================= */
-setInterval(async () => {
-    // 1. 如果没开主动闲聊，或者通讯录没联系人，直接罢工
-    if (!settingsApp.config.autoMsg) return;
-    if (msgApp.roles.length === 0) return;
+/* ================= 全局真实的“活人感”离线引擎 START ================= */
+let globalProactiveTimer = null;
+
+function startGlobalProactiveTimer() {
+    // 每次调用前，先把旧的定时器清理掉，防止重复倒计时
+    if (globalProactiveTimer) {
+        clearTimeout(globalProactiveTimer);
+        globalProactiveTimer = null;
+    }
     
-    // 2. 如果你正好在这个角色的聊天室里，交给聊天室自己的计时器处理，后台不插手防冲突
-    if (chatApp.currentRole && document.getElementById('chat-room-app').style.display === 'flex') return;
+    // 1. 如果设置里没开主动发消息，或者通讯录是空的，就直接罢工！不启动倒计时！
+    if (!settingsApp.config.autoMsg || msgApp.roles.length === 0) return;
 
+    // 2. 获取设置里的发消息间隔分钟数，并加入“活人感波动”
     let mins = parseFloat(settingsApp.config.autoMsgTime) || 30;
-    if (mins < 1) mins = 1; // 兜底防止除以 0
+    let baseMs = mins * 60 * 1000;
+    // -25% 到 +25% 的随机跳动
+    let fluctuate = (Math.random() - 0.5) * 0.5; 
+    let finalMs = baseMs * (1 + fluctuate);
+    if (finalMs < 15000) finalMs = 15000; // 兜底：怎么也不能低于15秒
 
-    // 3. 核心：每分钟掷一次骰子，概率 = 1 / 设定分钟数
-    // （比如设定 10 分钟，每分钟就有 1/10 的概率发消息，平均下来就是 10 分钟一条）
-    if (Math.random() < (1 / mins)) {
+    // 3. 开始精准倒计时
+    globalProactiveTimer = setTimeout(async () => {
         
-        // 默认挑出你最近聊过的一个角色（通讯录第一个人）
+        // 如果你正好点进了TA的聊天室，就不在后台发了（交给聊天室内的机制去发）
+        if (chatApp.currentRole && document.getElementById('chat-room-app').style.display === 'flex') {
+            startGlobalProactiveTimer(); // 重新开始下一轮倒计时
+            return; 
+        }
+
+        // 挑出联系人
         const targetRole = msgApp.roles[0];
         
         // 偷偷在后台抽取字卡
@@ -20077,10 +20091,10 @@ setInterval(async () => {
         if (pool.length === 0) pool = [{ text: '...' }];
         let text = pool[Math.floor(Math.random() * pool.length)].text;
         
-        // 组装消息 (未读状态)
+        // 组装消息 (状态是未读)
         const newMsg = { id: Date.now(), isMe: false, text: text, time: chatApp.getFormattedTime(), isRead: false };
         
-        // 提取数据库，把消息硬塞进去，然后再存起来
+        // 把消息硬塞进你们的聊天记录里，并存进数据库
         const chatRes = await DB.get('ChatData_' + targetRole.id);
         let history = chatRes ? chatRes.list : [];
         history.push(newMsg);
@@ -20090,21 +20104,44 @@ setInterval(async () => {
         targetRole.lastMsg = targetRole.name + ": " + text;
         await msgApp.save();
         
-        // 如果正好停留在通讯录界面，顺便刷新一下列表
+        // 如果你正好停留在通讯录列表页，顺便帮你刷新一下列表
         if (document.getElementById('msg-list-app').style.display === 'flex') {
             msgApp.render();
         }
         
-        // 在屏幕内部弹出提示框
-        showNotification(`收到来自 ${targetRole.name} 的新消息 ✧`);
-        
-        // 👉 调用刚写好的系统悬浮窗引擎，让手机震动并在顶部弹出真实的横幅通知！
+        // 👉 核心：调用手机系统级通知，让手机震动并在顶部弹出真实横幅！
         if (typeof notifyUser === 'function') {
-            notifyUser(`来自 ${targetRole.name} 的新消息`, text);
+            notifyUser(targetRole.name, text);
         }
-    }
-}, 60000); // 每 1 分钟（60000毫秒）在后台扫描一次
-/* ================= 全局离线闲聊引擎 END ================= */
+        
+        // 发完这一条之后，立刻启动下一轮计时！
+        startGlobalProactiveTimer();
+
+    }, finalMs);
+}
+
+// 👉 拦截 1：网页启动时，检查一次开关，决定要不要点火启动
+const finalStartLoadAll = loadAll;
+loadAll = async function() {
+    await finalStartLoadAll();
+    startGlobalProactiveTimer(); 
+};
+window.onload = loadAll;
+
+// 👉 拦截 2：监听你的“设置”面板！
+if (typeof settingsApp !== 'undefined') {
+    const originalSettingsUpdate = settingsApp.update.bind(settingsApp);
+    settingsApp.update = async function() {
+        await originalSettingsUpdate(); // 先执行原有的保存逻辑
+        // 保存完后检查：如果开关被关掉了，直接把倒计时掐死！如果打开了，就立刻开始倒计时！
+        if (!this.config.autoMsg) {
+            if (globalProactiveTimer) clearTimeout(globalProactiveTimer);
+        } else {
+            startGlobalProactiveTimer();
+        }
+    };
+}
+/* ================= 全局真实的“活人感”离线引擎 END ================= */
 </script>
 
 </body>
