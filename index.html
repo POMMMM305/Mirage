@@ -19796,33 +19796,69 @@ function testAutoMsgPopup() {
         alert("抱歉，您的浏览器不支持后台系统通知喔");
         return;
     }
-    
-    // 申请手机通知权限
     Notification.requestPermission().then(perm => {
         if (perm === "granted") {
-            // 手机端必须通过 Service Worker 发送，否则会被浏览器拦截
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistration().then(reg => {
                     if (reg) {
                         reg.showNotification("测试成功 ✧", {
                             body: "通知权限已开启！退到后台也能收到TA的消息啦~",
                             icon: './icon.png',
-                            vibrate: [200, 100, 200]
+                            vibrate: [300, 100, 300],
+                            requireInteraction: true, // 👈 强制系统在屏幕顶部悬浮弹窗
+                            silent: false
                         });
-                        showNotification("已触发系统通知，请下拉状态栏查看 ✧");
+                        showNotification("已触发系统通知，请确认手机是否在顶部弹出横幅 ✧");
                     } else {
                         alert("提示：请使用本地服务器(如127.0.0.1)或HTTPS打开网页，否则手机拦截弹窗！");
                     }
-                }).catch(err => {
-                    alert("通知引擎报错：" + err);
                 });
             } else {
-                new Notification("测试成功 ✧", { body: "通知权限已开启！退到后台也能收到TA的消息啦~" });
+                new Notification("测试成功 ✧", { body: "通知权限已开启！" });
             }
         } else {
-            alert("权限被拒绝！请去手机【设置】-【应用管理】中允许您当前使用的浏览器的【通知权限】喔");
+            alert("权限被拒绝！请去手机【设置】-【应用管理】中允许您当前使用的浏览器的【通知(横幅)权限】喔");
         }
     });
+}
+
+let lastNotifyTime = 0;
+// 👈 新增：真实触发手机系统悬浮通知的引擎
+function notifyUser(title, body) {
+    if ("Notification" in window && Notification.permission === "granted") {
+        // 只有当页面在后台或者没聚焦时才弹系统通知
+        if (document.hidden || !document.hasFocus()) {
+            let now = Date.now();
+            let isTooFast = (now - lastNotifyTime < 3500);
+            if (!isTooFast) lastNotifyTime = now; 
+
+            let plainText = body ? body.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ') : '[图片/表情]';
+            if (plainText.trim() === '') plainText = '[新消息]';
+            
+            try {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistration().then(reg => {
+                        if (reg) {
+                            reg.showNotification(title, {
+                                body: plainText,
+                                icon: './icon.png',
+                                badge: './icon.png',
+                                tag: 'yume-msg', 
+                                renotify: !isTooFast, 
+                                vibrate: isTooFast ? [] : [300, 100, 300], 
+                                requireInteraction: true, // 👈 让TA发来的消息也能在顶部悬浮弹出！
+                                silent: false
+                            });
+                        }
+                    });
+                } else {
+                    if (!isTooFast) new Notification(title, { body: plainText, icon: './icon.png', tag: 'yume-msg' });
+                }
+            } catch (e) {
+                if (!isTooFast) new Notification(title, { body: plainText, icon: './icon.png', tag: 'yume-msg' });
+            }
+        }
+    }
 }
 /* ================= 通知与弹窗系统 JS END ================= */
 
@@ -20059,8 +20095,13 @@ setInterval(async () => {
             msgApp.render();
         }
         
-        // 在屏幕顶部弹出提示框！
+        // 在屏幕内部弹出提示框
         showNotification(`收到来自 ${targetRole.name} 的新消息 ✧`);
+        
+        // 👉 调用刚写好的系统悬浮窗引擎，让手机震动并在顶部弹出真实的横幅通知！
+        if (typeof notifyUser === 'function') {
+            notifyUser(`来自 ${targetRole.name} 的新消息`, text);
+        }
     }
 }, 60000); // 每 1 分钟（60000毫秒）在后台扫描一次
 /* ================= 全局离线闲聊引擎 END ================= */
