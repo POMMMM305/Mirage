@@ -12101,6 +12101,54 @@ body.ui-goth .modal-content button:active {
     transform-origin: center bottom;
 }
 
+/* ================= 修复：编辑模式拍立得重叠难选 ================= */
+
+/* 1. 关掉外框的抖动动画，因为它会把原本推开的位置清零！改用丝滑的展开过渡 */
+.editing .widget-stack .stack-photo {
+    animation: none !important; 
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+/* 2. 把抖动效果转移到里面的图片上，这样摇晃感还在，但位置不会乱 */
+.editing .widget-stack .stack-img {
+    animation: wiggle 0.3s infinite;
+}
+
+/* 3. 编辑模式下，像洗牌一样把三张照片往左中右三个方向大幅度推开 */
+.editing .widget-stack .photo-1 {
+    /* 左边的照片：往左移 85px，稍微缩小一点 */
+    transform: translate(-85px, 10px) rotate(-15deg) scale(0.9) !important;
+    z-index: 31 !important;
+}
+
+.editing .widget-stack .photo-2 {
+    /* 中间的照片：往上提一点 */
+    transform: translate(0, -15px) scale(0.95) !important;
+    z-index: 32 !important;
+}
+
+.editing .widget-stack .photo-3 {
+    /* 右边的照片：往右移 85px，稍微缩小一点 */
+    transform: translate(85px, 10px) rotate(15deg) scale(0.9) !important;
+    z-index: 33 !important;
+}
+/* ============================================================== */
+
+/* ================= 修复：各种主题下顶部提示框偏右的问题 ================= */
+#mail-alert-box,
+#custom-confirm-box,
+.notification,
+#toast {
+    position: fixed !important;     /* 强制悬浮在屏幕固定位置 */
+    left: 50% !important;           /* 先往右推一半屏幕 */
+    transform: translateX(-50%) !important; /* 再精准拉回自己宽度的一半，实现完美居中！ */
+    margin-left: 0 !important;      /* 废掉乱跑的间距 */
+    margin-right: 0 !important;     /* 废掉乱跑的间距 */
+    z-index: 10000 !important;      /* 层级拉满，绝不被遮挡 */
+    max-width: 85vw !important;     /* 限制一下最大宽度，防止文字太长撑爆屏幕 */
+}
+/* ============================================================== */
+
 /* ================= 美化模块 CSS END ================= */
 
 
