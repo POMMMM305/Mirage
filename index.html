@@ -13074,7 +13074,11 @@ if ('serviceWorker' in navigator) {
         <div style="font-size: 9px; color: #888; text-align: center; margin-bottom: 10px; font-weight: bold;">
             无法言说的情绪，就化作乱码发送给TA吧。
         </div>
-        
+        <!-- 新增：脑电波互动开关 -->
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; border: 1px dashed #121212; padding: 8px; background: var(--bg-card);">
+    <span style="font-size:11px; font-weight:bold; color:#555;">允许TA主动发/回应电波</span>
+    <input type="checkbox" id="signal-enable-switch" class="st-switch" onchange="signalApp.toggleEnable()">
+</div>
         <label style="font-size:11px; color:#555; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; font-weight:bold;">
             <span>发送神秘信号</span>
             <span style="font-size:9px; color:var(--theme-accent); text-decoration:underline; cursor:pointer;" onclick="signalApp.toggleEdit()">[编辑自定义信号库]</span>
@@ -15446,7 +15450,7 @@ if (randSpecial < 0.03) {
         chatApp.render();
     }, 1000);
     
-} else if (randSpecial < 0.12) {
+} else if (randSpecial < 0.12 && localStorage.getItem('yume_signal_enable') !== 'false') {
     // 👉 新增：3% 概率梦角主动发送脑电波 (从你们的专属表情池里抽)
     let pool = [...signalApp.defaultPool, ...signalApp.customPool];
     let npcRes = '';
@@ -17663,6 +17667,8 @@ const signalApp = {
 
     async open() {
         await this.load();
+        // 👇 新增：每次打开读取开关状态，默认开启
+        document.getElementById('signal-enable-switch').checked = localStorage.getItem('yume_signal_enable') !== 'false';
         document.getElementById('signal-edit-area').style.display = 'none';
         document.getElementById('signal-modal').style.display = 'flex';
         this.randomize();
@@ -17678,6 +17684,13 @@ const signalApp = {
         }
     },
 
+// 👇 新增：点击开关时保存状态
+    toggleEnable() {
+        const isEnable = document.getElementById('signal-enable-switch').checked;
+        localStorage.setItem('yume_signal_enable', isEnable);
+        showNotification(isEnable ? "已允许TA发送电波 ✧" : "已关闭TA的电波互动 ⨯");
+    },
+    
     async savePool() {
         const text = document.getElementById('signal-pool-input').value;
         this.customPool = text.split('\n').map(s => s.trim()).filter(Boolean);
@@ -17710,12 +17723,19 @@ const signalApp = {
         chatApp.currentRole.lastMsg = "我: [发送了脑电波]";
         await msgApp.save(); await chatApp.save(); chatApp.render();
 
+        // 👇 修复：如果开关关了，就让他像平时一样回正常的字卡！
+        if (localStorage.getItem('yume_signal_enable') === 'false') {
+            if (!(settingsApp.config.noReply && Math.random() < 0.05)) {
+                chatApp.triggerNpcReply(); // 触发正常聊天回复
+            }
+            return; // 结束这里的电波专属流程
+        }
+
         chatApp.setTypingState(true);
 
         // 2. 模拟梦角思考并纯用 Emoji 回复
         setTimeout(async () => {
             chatApp.setTypingState(false);
-            
             // 梦角也从混合池子里随机抽 1~10 个 Emoji 回复，完全没有文字！
             const pool = [...this.defaultPool, ...this.customPool];
             let npcRes = '';
