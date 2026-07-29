@@ -17508,14 +17508,19 @@ sysPrompt += "\n【最高指令】你必须直接输出最终的解读内容！�
             let apiMessages = [{ role: 'system', content: sysPrompt }];
 // --- 改造：让历史记录也能兼容所有特殊卡片 ---
 historyMsgs.forEach(m => {
-    // 过滤掉不需要发给 AI 的系统提示等
-    if (m.type === 'system' || m.type === 'red_packet' || m.type === 'thought' || m.type === 'memo_alert') return;
-    
-    let text = m.text;
+            // 过滤掉不需要发给 AI 的系统提示等
+        if (m.type === 'system' || m.type === 'red_packet' || m.type === 'thought' || m.type === 'memo_alert') return;
+        
+        let text = m.text;
 
-    // 智能翻译各种特殊卡片，防止 AI 报错
-    if (m.type === 'image') {
-        text = '[发送了一张图片]';
+        // 🌟 核心修复：把文字里夹杂的表情包Base64代码全部清洗掉，只留纯文字！
+        if (text && typeof text === 'string') {
+            text = text.replace(/<img[^>]*>/gi, '[表情/图片]').replace(/<br>/gi, ' ').replace(/<[^>]+>/g, '');
+        }
+
+        // 智能翻译各种特殊卡片，防止 AI 报错
+        if (m.type === 'image') {
+            text = '[发送了一张图片]';
     } else if (m.type === 'tarot') {
         let cardStr = m.cards.map(c => c.name + (c.isReversed ? '逆位' : '正位')).join('、');
         text = `[塔罗占卜] 问题：${m.question}，抽到的牌：${cardStr}`;
@@ -17542,6 +17547,12 @@ historyMsgs.forEach(m => {
 
 // --- 改造：针对当前长按的消息，如果是塔罗牌就定制专属提问 ---
 let targetText = msgObj.text;
+
+// 🌟 核心修复：如果长按的这句包含表情包，也要把Base64代码清洗掉！
+if (targetText && typeof targetText === 'string') {
+    targetText = targetText.replace(/<img[^>]*>/gi, '[表情/图片]').replace(/<br>/gi, ' ').replace(/<[^>]+>/g, '');
+}
+
 let finalQuestion = `结合上述聊天语境，TA 刚才发给我：“${targetText}”。请你作为旁观者，客观分析 TA 说这句话的真实潜台词。请用第三人称解读，不要自我代入。不要加戏，不要废话，直接输出分析结果！`;
 
 if (msgObj.type === 'image') {
