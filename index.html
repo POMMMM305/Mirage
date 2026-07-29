@@ -15994,7 +15994,19 @@ if (msg.type === 'tarot') {
                 <div class="tarot-card-name">${c.name}</div>
                 <div class="tarot-card-state">${c.isReversed ? '逆位' : '正位'}</div>
             </div>`;
-}).join('');
+    }).join('');
+
+    // 👇 这里是为你补上的“AI 解读气泡”占位逻辑
+    let decodeHTML = '';
+    if (msg.decodeText) {
+        decodeHTML = `
+            <div style="width: 100%; display: flex; justify-content: ${msg.isMe ? 'flex-end' : 'flex-start'}; margin-top: 2px;">
+                <div style="max-width: 85%;">
+                    <div class="decode-inline-box">${msg.decodeText}</div>
+                </div>
+            </div>
+        `;
+    }
 
     el.innerHTML = `
         ${multiCheckHTML}
@@ -16007,6 +16019,7 @@ if (msg.type === 'tarot') {
                     <div style="text-align:center;">${cardsHTML}</div>
                 </div>
             </div>
+            ${decodeHTML} <!-- 👈 把它挂载在塔罗卡片的正下方 -->
         </div>
     `;
     fragment.appendChild(el);
@@ -17493,21 +17506,58 @@ sysPrompt += "\n【最高指令】你必须直接输出最终的解读内容！�
             let historyMsgs = chatApp.messages.slice(startIdx, targetIdx + 1);
 
             let apiMessages = [{ role: 'system', content: sysPrompt }];
-            historyMsgs.forEach(m => {
-                if (m.type === 'system' || m.type === 'red_packet' || m.type === 'thought') return;
-                let text = m.type === 'image' ? '[发送了一张图片]' : m.text;
-                apiMessages.push({
-                    role: m.isMe ? 'user' : 'assistant',
-                    content: text
-                });
-            });
+// --- 改造：让历史记录也能兼容所有特殊卡片 ---
+historyMsgs.forEach(m => {
+    // 过滤掉不需要发给 AI 的系统提示等
+    if (m.type === 'system' || m.type === 'red_packet' || m.type === 'thought' || m.type === 'memo_alert') return;
+    
+    let text = m.text;
 
-            // 如果最后一条不是 user (比如你要解读对方的话，最后一条应该强制作为 user 提问过去)
-            // OpenAI 接口其实无所谓，只要明确那是谁说的就行，稳妥起见，我们加一句引导：
-            let targetText = msgObj.type === 'image' ? '[一张图片]' : msgObj.text;
+    // 智能翻译各种特殊卡片，防止 AI 报错
+    if (m.type === 'image') {
+        text = '[发送了一张图片]';
+    } else if (m.type === 'tarot') {
+        let cardStr = m.cards.map(c => c.name + (c.isReversed ? '逆位' : '正位')).join('、');
+        text = `[塔罗占卜] 问题：${m.question}，抽到的牌：${cardStr}`;
+    } else if (m.type === 'recipe') {
+        text = '[分享了一份饮食手账]';
+    } else if (m.type === 'anniversary') {
+        text = '[分享了一个纪念日]';
+    } else if (m.type === 'decision_ask' || m.type === 'tacit_ask') {
+        text = `[发起了一个互动问题] Q: ${m.question}`;
+    } else if (m.type === 'decision_ans') {
+        text = `[回答了互动问题] A: ${m.answer}`;
+    } else if (m.type === 'tacit_ans') {
+        text = `[完成了默契测试]`;
+    } else if (!text) {
+        // 🌟 终极兜底：只要是没有文字的卡片，通通翻译成这句话，绝不让它报错！
+        text = '[发送了一张特殊卡片]';
+    }
+
+    apiMessages.push({
+        role: m.isMe ? 'user' : 'assistant',
+        content: text
+    });
+});
+
+// --- 改造：针对当前长按的消息，如果是塔罗牌就定制专属提问 ---
+let targetText = msgObj.text;
+let finalQuestion = `结合上述聊天语境，TA 刚才发给我：“${targetText}”。请你作为旁观者，客观分析 TA 说这句话的真实潜台词。请用第三人称解读，不要自我代入。不要加戏，不要废话，直接输出分析结果！`;
+
+if (msgObj.type === 'image') {
+    targetText = '[一张图片]';
+    finalQuestion = `结合上述聊天语境，TA 刚才发给我：“${targetText}”。请你作为旁观者，客观分析 TA 说这句话的真实潜台词。请用第三人称解读，不要自我代入。不要加戏，不要废话，直接输出分析结果！`;
+} else if (msgObj.type === 'tarot') {
+    // 把塔罗牌数据拼成文字：“愚者正位、死神逆位...”
+    let cardStr = msgObj.cards.map(c => c.name + (c.isReversed ? '逆位' : '正位')).join('、');
+    targetText = `[塔罗占卜] 问题：${msgObj.question}，牌面：${cardStr}`;
+    // 塔罗牌专属 AI 提示词（强化结合语境版）
+finalQuestion = `结合上述的聊天语境，TA 刚刚抽出了塔罗牌：“${targetText}”。请你作为神秘学占卜师，**必须紧密结合我们刚刚聊天的具体内容**来深度解读！绝对不要给我背诵干巴巴的塔罗牌通用释义！你要分析这组牌在当前的聊天氛围下，暗示了 TA 什么样的真实潜台词、当下的心境，以及对我们关系的启示。请用第三人称客观解读，不要自我代入，不要废话，直接输出结果！`;
+}
+
 apiMessages.push({
     role: 'user',
-    content: `结合上述聊天语境，TA 刚才发给我：“${targetText}”。请你作为旁观者，客观分析 TA 说这句话的真实潜台词。请用第三人称解读，不要自我代入。不要加戏，不要废话，直接输出分析结果！`
+    content: finalQuestion
 });
 
             let cleanUrl = this.config.baseUrl.endsWith('/') ? this.config.baseUrl.slice(0, -1) : this.config.baseUrl;
@@ -17529,14 +17579,18 @@ apiMessages.push({
             });
 
             const data = await response.json();
-            if (data.choices && data.choices.length > 0) {
-                msgObj.decodeText = data.choices[0].message.content.trim();
-            } else {
-                throw new Error("接口返回异常");
-            }
-        } catch (e) {
-            msgObj.decodeText = '[ 解读失败，请检查网络或密钥 ]';
-        }
+if (data.choices && data.choices.length > 0) {
+    msgObj.decodeText = data.choices[0].message.content.trim();
+} else if (data.error && data.error.message) {
+    // 抓取 DeepSeek 官方返回的真实报错信息
+    throw new Error(data.error.message);
+} else {
+    throw new Error("接口返回异常");
+}
+} catch (e) {
+    // 把真正的错误原因显示在聊天气泡里
+    msgObj.decodeText = '[ 解读失败: ' + e.message + ' ]';
+}
         
         await chatApp.save();
         chatApp.render('keep');
